@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surfaces</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet" />
+  
+  <style>
+       #surfaces-root canvas { display:block; position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none; }
+    #surfaces-root #title { position:absolute; left:28px; top:24px; max-width: calc(100% - 220px); color:#f4f7fb; font-family:"Cormorant Garamond", Georgia, serif; pointer-events:none; user-select:none; z-index:4; }
+    #surfaces-root #title h1 { display:block !important; visibility:visible !important; opacity:1 !important; margin:0 !important; font-weight:400 !important; font-size:clamp(28px,4.2vw,52px) !important; letter-spacing:-0.02em !important; line-height:0.95 !important; color:#f4f7fb !important; overflow-wrap:break-word !important; word-break:break-word !important; }
+    #surfaces-root #title p { margin:8px 0 0; font-family:Outfit,sans-serif; font-weight:300; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; opacity:0.55; }
+    #surfaces-root #ui { position:absolute; left:0; right:0; bottom:0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, rgba(5,6,12,0) 0%, rgba(5,6,12,0.03) 60%, rgba(5,6,12,0.06) 100%); color:#e8f2ff; user-select:none; z-index:6; }
+    #surfaces-root #menuHead { display:flex; align-items:center; justify-content:space-between; margin:0 4px 10px; font-family:Outfit,sans-serif; }
+    #surfaces-root #menuHead span { font-size:11px; letter-spacing:0.16em; text-transform:uppercase; opacity:0.85; text-shadow:0 1px 6px rgba(0,0,0,0.85); }
+    #surfaces-root #menuHead em { font-style:normal; opacity:0.6; margin-left:8px; letter-spacing:0.08em; }
+    #surfaces-root #scroller { position:relative; }
+    #surfaces-root #scroller::before, #surfaces-root #scroller::after { content:""; position:absolute; top:0; bottom:0; width:24px; z-index:2; pointer-events:none; }
+    #surfaces-root #scroller::before { left:0;  background:linear-gradient(90deg, rgba(5,6,12,0.15), transparent); }
+    #surfaces-root #scroller::after  { right:0; background:linear-gradient(270deg, rgba(5,6,12,0.15), transparent); }
+    #surfaces-root #buttons { display:flex; gap:12px; overflow-x:auto; padding:8px 36px 12px; scroll-behavior:smooth; scrollbar-width:none; }
+    #surfaces-root #buttons::-webkit-scrollbar { display:none; }
+    #surfaces-root #buttons button { flex:0 0 auto; width:78px; padding:8px 6px 10px; background: rgba(255,255,255,0.03); backdrop-filter: blur(2px) saturate(130%); -webkit-backdrop-filter: blur(3px) saturate(130%); border: 1px solid rgba(255,255,255,0.13); border-top-color: rgba(255,255,255,0.07); border-radius:22px; cursor:pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.50), inset 0 -1px 0 rgba(255,255,255,0.08); transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; -webkit-tap-highlight-color:transparent; }
+    #surfaces-root #buttons button canvas { position:static; width:66px; height:66px; display:block; border-radius:14px; pointer-events:none; background:transparent; }
+    #surfaces-root #buttons button span { display:block; margin-top:6px; text-align:center; font-family:Outfit,sans-serif; font-weight:400; font-size:10px; letter-spacing:0.03em; color:rgba(255,255,255,0.95); text-shadow:0 1px 4px rgba(0,0,0,0.85); }
+    #surfaces-root #buttons button:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.45); border-top-color: rgba(255,255,255,0.7); }
+    #surfaces-root #buttons button.active { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.6); border-top-color: rgba(255,255,255,0.85); box-shadow: 0 0 16px rgba(255,255,255,0.18), 0 3px 10px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.12); }
+    #surfaces-root #buttons button.active span { color:#fff; }
+    #surfaces-root #buttons button:active { transform:scale(0.95); }
+    #surfaces-root .arrow { width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,0.20); background: rgba(255,255,255,0.055); backdrop-filter: blur(7px) saturate(150%); -webkit-backdrop-filter: blur(7px) saturate(150%); color: rgba(255,255,255,0.95); font-size:18px; line-height:1; cursor:pointer; padding:0; box-shadow: 0 3px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.32), inset 0 -1px 0 rgba(255,255,255,0.06); transition: background 0.2s, border-color 0.2s, transform 0.1s, color 0.2s; -webkit-tap-highlight-color:transparent; }
+    #surfaces-root .arrow:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.32); }
+    #surfaces-root .arrow:active { transform:scale(0.92); }
+    #surfaces-root #sound { position:absolute; right:20px; top:22px; z-index:2147483647; width:36px; height:36px; min-width:36px; min-height:36px; max-width:36px; max-height:36px; padding:0; box-sizing:border-box; border-radius:50%; aspect-ratio:1/1; background: rgba(255,255,255,0.03); backdrop-filter: blur(2px) saturate(130%); -webkit-backdrop-filter: blur(3px) saturate(130%); border: 1px solid rgba(255,255,255,0.13); border-top-color: rgba(255,255,255,0.07); color: rgba(255,255,255,0.95); cursor:pointer; pointer-events:auto; user-select:none; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; box-shadow: 0 3px 10px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.50), inset 0 -1px 0 rgba(255,255,255,0.08); transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s; }
+    #surfaces-root #sound:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.45); border-top-color: rgba(255,255,255,0.7); }
+    #surfaces-root #sound.on { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.6); border-top-color: rgba(255,255,255,0.85); color:#fff; box-shadow: 0 0 16px rgba(255,255,255,0.18), 0 3px 10px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(255,255,255,0.12); }
+    #surfaces-root #sound svg { display:block; pointer-events:none; }
+    #surfaces-root #sound .waves { opacity:0; transition: opacity 0.2s; }
+    #surfaces-root #sound.on .waves { opacity:1; }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #surfaces-root #buttons button, #surfaces-root .arrow, #surfaces-root #sound { background: rgba(30,35,50,0.55); } }
+    #surfaces-root #formula { position:absolute; top:118px; left:28px; right:28px; font-family:'EB Garamond','Cormorant Garamond',serif; font-style:italic; font-size:16px; font-weight:400; color:rgba(235,245,255,0.95); letter-spacing:0.02em; pointer-events:none; z-index:5; text-shadow:0 1px 10px rgba(0,0,0,0.9); }
+    #surfaces-root #desc { position:absolute; bottom:240px; left:28px; right:28px; font-family:'Cormorant Garamond',serif; font-size:14px; font-weight:400; line-height:1.45; color:rgba(230,242,255,0.92); letter-spacing:0.01em; pointer-events:none; z-index:5; max-width:420px; text-shadow:0 1px 10px rgba(0,0,0,0.9); }
+    #surfaces-root #palettes { position:absolute; right:68px; top:22px; height:36px; z-index:2147483646; display:flex; gap:10px; align-items:center; pointer-events:auto; }
+    #surfaces-root #palettes button { box-sizing:border-box; width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.4); cursor:pointer; padding:0; box-shadow:0 0 8px rgba(0,0,0,0.45), inset 0 0 4px rgba(255,255,255,0.25); transition:transform 0.15s, border-color 0.15s, box-shadow 0.15s; pointer-events:auto; user-select:none; -webkit-tap-highlight-color:transparent; background-size:100% 100%; }
+    @keyframes palettePulse { 0%, 100% { box-shadow: 0 0 18px rgba(255,220,160,1), 0 0 42px rgba(255,180,90,0.85), 0 0 76px rgba(255,140,40,0.50), 0 0 120px rgba(255,120,20,0.25), inset 0 0 6px rgba(255,255,255,0.7); } 50% { box-shadow: 0 0 30px rgba(255,240,200,1), 0 0 72px rgba(255,205,130,1), 0 0 130px rgba(255,165,65,0.85), 0 0 185px rgba(255,135,35,0.45), inset 0 0 10px rgba(255,255,255,0.95); } }
+    #surfaces-root #palettes button.active { border-color:#fff; transform:scale(1.18); animation: palettePulse 2.4s ease-in-out infinite; }
+    @media (max-width: 700px) { #surfaces-root #palettes { top: 20px; right: 62px; height: 36px; gap: 8px; } #surfaces-root #palettes button { width: 18px; height: 18px; border-width: 1.5px; } #surfaces-root #sound { top: 20px; right: 18px; } #surfaces-root #title { top: 24px; max-width: calc(100% - 160px); } #surfaces-root #title h1 { font-size: clamp(28px, 8.2vw, 42px) !important; } #surfaces-root #formula { font-size: 13px; top: 106px; } }
+    @media (max-height: 520px) and (orientation: landscape) {
+      #surfaces-root #title { top: 12px; left: 18px; max-width: calc(100% - 200px); }
+      #surfaces-root #title h1 { font-size: clamp(20px, 3.5vw, 30px) !important; }
+      #surfaces-root #title p { font-size: 10px; margin-top: 4px; letter-spacing: 0.14em; }
+      #surfaces-root #formula { top: 78px; font-size: 12px; }
+      #surfaces-root #desc { bottom: 118px; font-size: 11px; max-width: 300px; line-height: 1.35; }
+      #surfaces-root #ui { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+      #surfaces-root #menuHead { margin-bottom: 6px; }
+      #surfaces-root #buttons { padding: 4px 30px 8px; gap: 8px; }
+      #surfaces-root #buttons button { width: 58px; padding: 5px 4px 7px; border-radius: 16px; }
+      #surfaces-root #buttons button canvas { width: 46px; height: 46px; }
+      #surfaces-root #buttons button span { font-size: 9px; margin-top: 3px; }
+      #surfaces-root #palettes { top: 10px; right: 58px; height: 30px; gap: 6px; }
+      #surfaces-root #palettes button { width: 16px; height: 16px; border-width: 1.5px; }
+      #surfaces-root #sound { top: 10px; right: 12px; width: 30px; height: 30px; min-width:30px; min-height:30px; max-width:30px; max-height:30px; }
+      #surfaces-root #sound svg { width: 14px; height: 14px; }
+    }
+    body { margin: 0; padding: 0; background: #05060c; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="surfaces-root" style="position:relative;width:100%;height:100vh;height:100dvh;min-height:400px;overflow:hidden;">
+    <div id="palettes"></div>
+    <div id="title">
+      <h1 id="surf-name">Mobius</h1>
+      <p>Drag to rotate · Pinch to zoom · Forms grow and settle</p>
+      <div id="formula"></div>
+    </div>
+    <div id="desc"></div>
+    <button id="sound" type="button" aria-label="Sound">
+      <svg viewBox="0 0 24 24" width="17" height="17">
+        <path d="M4 9v6h3.2l5 4V5l-5 4H4z" fill="currentColor"/>
+        <path class="waves" d="M15.5 8.6a5 5 0 0 1 0 6.8 M18.4 5.6a9 9 0 0 1 0 12.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="ui">
+      <div id="menuHead">
+        <span>Surfaces <em id="count"></em></span>
+        <span>
+          <button class="arrow" id="prev" type="button">‹</button>
+          <button class="arrow" id="next" type="button">›</button>
+        </span>
+      </div>
+      <div id="scroller"><div id="buttons"></div></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <script>
+    (function stripDuplicates() {
+      const all = document.querySelectorAll('[id="surfaces-root"]');
+      for (let i = all.length - 1; i > 0; i--) all[i].remove();
+    })();
+
+    const root = document.getElementById('surfaces-root');
+    if (!root) throw new Error('surfaces-root not found');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x05060c, 1);
+    root.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+    camera.position.set(3.4, 2.6, 3.8);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.4;
+    controls.enablePan = false;
+
+    const AUTO_FIT_FILL = 0.65;
+    function autoFitHalfHeight() {
+      const D = camera.position.length();
+      return Math.tan((camera.fov * Math.PI / 180) / 2) * D;
+    }
+    function autoFitScaleFromRadius(radius) {
+      return (autoFitHalfHeight() * AUTO_FIT_FILL) / Math.max(radius, 0.01);
+    }
+    function measureSurfaceRadius() {
+      surface.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(surface);
+      if (box.isEmpty()) return 1;
+      const s = new THREE.Sphere();
+      box.getBoundingSphere(s);
+      return Math.max(s.radius, 0.01);
+    }
+
+    function resize() {
+      const vv = window.visualViewport;
+      const w = root.clientWidth  || (vv ? vv.width  : window.innerWidth);
+      const h = root.clientHeight || (vv ? vv.height : window.innerHeight);
+      if (w <= 0 || h <= 0) return;
+      renderer.setSize(w, h, false);
+      renderer.domElement.style.width  = '100%';
+      renderer.domElement.style.height = '100%';
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    scene.add(new THREE.AmbientLight(0x223344, 0.45));
+    const key = new THREE.PointLight(0xc8f0ff, 26, 24);
+    key.position.set(2, 3, 2);
+    scene.add(key);
+
+    const softDot = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 256;
+      const g = c.getContext('2d');
+      const grd = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+      grd.addColorStop(0,    'rgba(255,255,255,1)');
+      grd.addColorStop(0.08, 'rgba(255,248,230,0.85)');
+      grd.addColorStop(0.22, 'rgba(255,236,190,0.35)');
+      grd.addColorStop(0.5,  'rgba(255,220,160,0.08)');
+      grd.addColorStop(1,    'rgba(255,255,255,0)');
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 256, 256);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    })();
+
+    const starCount = 4000;
+    const starPos = new Float32Array(starCount * 3);
+    const starColorArr = new Float32Array(starCount * 3);
+    const goldWarm   = new THREE.Color(0xffd18a);
+    const goldDeep   = new THREE.Color(0xffb060);
+    const coolBlue   = new THREE.Color(0xb8d4ff);
+    const coolViolet = new THREE.Color(0xc9b0ff);
+    for (let i = 0; i < starCount; i++) {
+      const r = 10 + Math.pow(Math.random(), 0.7) * 55;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      starPos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+      starPos[i*3+1] = r * Math.cos(ph);
+      starPos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+      const pick = Math.random();
+      let base;
+      if (pick < 0.55)      base = goldWarm;
+      else if (pick < 0.75) base = goldDeep;
+      else if (pick < 0.9)  base = coolBlue;
+      else                  base = coolViolet;
+      const bright = 0.5 + Math.pow(Math.random(), 1.4) * 1.0;
+      starColorArr[i*3]   = base.r * bright;
+      starColorArr[i*3+1] = base.g * bright;
+      starColorArr[i*3+2] = base.b * bright;
+    }
+    const starsGeo = new THREE.BufferGeometry();
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    starsGeo.setAttribute('color', new THREE.BufferAttribute(starColorArr, 3));
+    const starsMat = new THREE.PointsMaterial({ map: softDot, vertexColors: true, size: 0.65, transparent: true, opacity: 0.76, sizeAttenuation: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+    const stars = new THREE.Points(starsGeo, starsMat);
+    scene.add(stars);
+
+    const dustCount = 90;
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      const r = 10 + Math.pow(Math.random(), 0.7) * 55;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      dustPos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+      dustPos[i*3+1] = r * Math.cos(ph);
+      dustPos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+    }
+    const dustMat = new THREE.PointsMaterial({ map: softDot, color: 0xffdca0, size: 0.85, transparent: true, opacity: 0.52, sizeAttenuation: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+    const dust = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(dustPos, 3)), dustMat);
+    scene.add(dust);
+
+    scene.fog = new THREE.FogExp2(0x05060c, 0.04);
+
+    const palettes = {
+      Sunset: [ new THREE.Color(0x2d3b22), new THREE.Color(0x4e6b42), new THREE.Color(0x687d47), new THREE.Color(0x7d4522), new THREE.Color(0xec5c3c), new THREE.Color(0xec5c3c), new THREE.Color(0xf28e61), new THREE.Color(0xb87333), new THREE.Color(0x4e6b42), new THREE.Color(0x2d3b22), new THREE.Color(0x2eb8b8) ],
+      Ocean:  [ new THREE.Color(0x3a5eff), new THREE.Color(0x2266ff), new THREE.Color(0x3cbdd7), new THREE.Color(0x3a6b2e), new THREE.Color(0xb85a26) ],
+      Mono:   [ new THREE.Color(0x000000), new THREE.Color(0x9d9db1), new THREE.Color(0xffffff) ],
+      Emerald: [ new THREE.Color(0x0466c8), new THREE.Color(0x2ec4b6), new THREE.Color(0x8af0d1), new THREE.Color(0x1b7342), new THREE.Color(0x0b3d2e), new THREE.Color(0xb87333), new THREE.Color(0x55a630), new THREE.Color(0x2ec4b6), new THREE.Color(0x2b9348) ]
+    };
+    let palette = palettes.Ocean;
+
+    function colorAt(u, v) {
+      const t = Math.max(0, Math.min(1, u * 0.65 + v * 0.35));
+      const c = new THREE.Color();
+      const n = palette.length;
+      if (n === 3) {
+        c.copy(palette[0]).lerp(palette[1], Math.min(1, t * 1.4));
+        c.lerp(palette[2], Math.max(0, t - 0.35) * 0.9);
+      } else {
+        const scaled = t * (n - 1);
+        const i = Math.floor(scaled);
+        const f = scaled - i;
+        const smooth = f * f * (3 - 2 * f);
+        c.copy(palette[i]).lerp(palette[Math.min(i + 1, n - 1)], smooth);
+      }
+      return c;
+    }
+
+    function build(nu, nv, fn, closeV = false, dotStride = 2) {
+      const positions = [], colors = [], indices = [];
+      const dots = [], dotColors = [];
+      for (let j = 0; j <= nv; j++) {
+        for (let i = 0; i <= nu; i++) {
+          const u = i / nu, v = j / nv;
+          const p = fn(u, v);
+          positions.push(p.x, p.y, p.z);
+          const c = colorAt(u, v);
+          colors.push(c.r, c.g, c.b);
+          if (i % dotStride === 0 && j % dotStride === 0) {
+            dots.push(p.x, p.y, p.z);
+            dotColors.push(c.r, c.g, c.b);
+          }
+        }
+      }
+      for (let j = 0; j < nv; j++) {
+        for (let i = 0; i < nu; i++) {
+          const a = j * (nu + 1) + i;
+          indices.push(a, a + 1, a, a + nu + 1);
+        }
+      }
+      if (closeV) {
+        for (let i = 0; i < nu; i++) {
+          const a = nv * (nu + 1) + i;
+          indices.push(a, i);
+        }
+      }
+      const edge = [], edgeColors = [];
+      for (let i = 0; i <= nu; i += 3) { const p = fn(i / nu, 1); edge.push(p.x, p.y, p.z); const c = colorAt(i / nu, 1); edgeColors.push(c.r, c.g, c.b); }
+      for (let j = 0; j <= nv; j += 3) { const p = fn(1, j / nv); edge.push(p.x, p.y, p.z); const c = colorAt(1, j / nv); edgeColors.push(c.r, c.g, c.b); }
+      const rim = [], rimColors = [];
+      const pushRim = (uu, vv) => { const p = fn(uu, vv); rim.push(p.x, p.y, p.z); const c = colorAt(uu, vv); rimColors.push(c.r, c.g, c.b); };
+      for (let i = 0; i <= nu; i++) pushRim(i / nu, 0);
+      for (let j = 1; j <= nv; j++) pushRim(1, j / nv);
+      for (let i = nu - 1; i >= 0; i--) pushRim(i / nu, 1);
+      for (let j = nv - 1; j >= 1; j--) pushRim(0, j / nv);
+      const corners = [], cornerColors = [];
+      [[0,0],[1,0],[1,1],[0,1]].forEach(([uu, vv]) => { const p = fn(uu, vv); corners.push(p.x, p.y, p.z); const c = colorAt(uu, vv); cornerColors.push(c.r, c.g, c.b); });
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      geo.setIndex(indices);
+
+      const dotGeo = new THREE.BufferGeometry();
+      dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dots, 3));
+      dotGeo.setAttribute('color', new THREE.Float32BufferAttribute(dotColors, 3));
+
+      const edgeGeo = new THREE.BufferGeometry();
+      edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(edge, 3));
+      edgeGeo.setAttribute('color', new THREE.Float32BufferAttribute(edgeColors, 3));
+
+      const rimGeo = new THREE.BufferGeometry();
+      rimGeo.setAttribute('position', new THREE.Float32BufferAttribute(rim, 3));
+      rimGeo.setAttribute('color', new THREE.Float32BufferAttribute(rimColors, 3));
+
+      const cornerGeo = new THREE.BufferGeometry();
+      cornerGeo.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
+      cornerGeo.setAttribute('color', new THREE.Float32BufferAttribute(cornerColors, 3));
+
+      return { geo, dotGeo, edgeGeo, rimGeo, cornerGeo };
+    }
+
+    const PHI = (1 + Math.sqrt(5)) / 2;
+  const PHI2 = PHI * PHI;
+  const ONE_PLUS_2PHI = 1 + 2 * PHI;
+
+  const BARTH_NU = 240;
+  const BARTH_NV = 144;
+  const BARTH_NU1 = BARTH_NU + 1;
+  const BARTH_NV1 = BARTH_NV + 1;
+  const BARTH_VERTS = BARTH_NU1 * BARTH_NV1;
+  const BARTH_R_MAX = 3.0;
+  const BARTH_S_MIN = 0.0004;
+  const BARTH_S_MAX = BARTH_R_MAX * BARTH_R_MAX;
+
+  const BARTH_DOT_STRIDE_U = 2;
+  const BARTH_DOT_STRIDE_V = 2;
+  const BARTH_MAX_DOTS = Math.ceil(BARTH_NU1 / BARTH_DOT_STRIDE_U) * Math.ceil(BARTH_NV1 / BARTH_DOT_STRIDE_V);
+
+  const BARTH_SMOOTH_KEEP = 0.62;
+  const BARTH_SMOOTH_BLEND = 0.38;
+  const BARTH_SMOOTH_PASSES = 2;
+
+  const bDirX = new Float32Array(BARTH_VERTS);
+  const bDirY = new Float32Array(BARTH_VERTS);
+  const bDirZ = new Float32Array(BARTH_VERTS);
+  const bDirA = new Float32Array(BARTH_VERTS);
+
+  const bRadArr = new Float32Array(BARTH_VERTS);
+  const bSmoothTmpArr = new Float32Array(BARTH_VERTS);
+
+  (function precompute() {
+    let idx = 0;
+    for (let j = 0; j < BARTH_NV1; j++) {
+      const theta = (j / BARTH_NV) * Math.PI;
+      const sT = Math.sin(theta), cT = Math.cos(theta);
+      for (let i = 0; i < BARTH_NU1; i++) {
+        const phi = (i / BARTH_NU) * Math.PI * 2;
+        const sP = Math.sin(phi), cP = Math.cos(phi);
+        const X = sT * cP, Y = cT, Z = sT * sP;
+        bDirX[idx] = X; bDirY[idx] = Y; bDirZ[idx] = Z;
+        const A1 = PHI2 * X * X - Y * Y;
+        const A2 = PHI2 * Y * Y - Z * Z;
+        const A3 = PHI2 * Z * Z - X * X;
+        bDirA[idx] = A1 * A2 * A3;
+        idx++;
+      }
+    }
+  })();
+
+  const bPosArr = new Float32Array(BARTH_VERTS * 3);
+  const bColArr = new Float32Array(BARTH_VERTS * 3);
+  const bValidArr = new Uint8Array(BARTH_VERTS);
+
+  const bMaxSeg = BARTH_NU * BARTH_NV1 + BARTH_NU1 * BARTH_NV;
+  const bIdxArr = new Uint32Array(bMaxSeg * 2);
+
+  const bGeom = new THREE.BufferGeometry();
+  const bPosAttr = new THREE.BufferAttribute(bPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const bColAttr = new THREE.BufferAttribute(bColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const bIdxAttr = new THREE.BufferAttribute(bIdxArr, 1).setUsage(THREE.DynamicDrawUsage);
+  bGeom.setAttribute('position', bPosAttr);
+  bGeom.setAttribute('color', bColAttr);
+  bGeom.setIndex(bIdxAttr);
+  bGeom.setDrawRange(0, 0);
+
+  const bLineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+  const barthMesh = new THREE.LineSegments(bGeom, bLineMat);
+  barthMesh.frustumCulled = false;
+
+  const bDotPosArr = new Float32Array(BARTH_MAX_DOTS * 3);
+  const bDotColArr = new Float32Array(BARTH_MAX_DOTS * 3);
+  const bDotGeom = new THREE.BufferGeometry();
+  const bDotPosAttr = new THREE.BufferAttribute(bDotPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const bDotColAttr = new THREE.BufferAttribute(bDotColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  bDotGeom.setAttribute('position', bDotPosAttr);
+  bDotGeom.setAttribute('color', bDotColAttr);
+  bDotGeom.setDrawRange(0, 0);
+
+  const BASE_BARTH_DOT = 0.078;
+  const bDotMat = new THREE.PointsMaterial({ size: BASE_BARTH_DOT, map: softDot, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const barthDotsMesh = new THREE.Points(bDotGeom, bDotMat);
+  barthDotsMesh.frustumCulled = false;
+
+  const bEdgePosArr = new Float32Array(BARTH_VERTS * 3);
+  const bEdgeColArr = new Float32Array(BARTH_VERTS * 3);
+  const bEdgeGeom = new THREE.BufferGeometry();
+  const bEdgePosAttr = new THREE.BufferAttribute(bEdgePosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const bEdgeColAttr = new THREE.BufferAttribute(bEdgeColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  bEdgeGeom.setAttribute('position', bEdgePosAttr);
+  bEdgeGeom.setAttribute('color', bEdgeColAttr);
+  bEdgeGeom.setDrawRange(0, 0);
+
+  const BASE_BARTH_EDGE = 0.160;
+  const bEdgeMat = new THREE.PointsMaterial({ size: BASE_BARTH_EDGE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const barthEdgeMesh = new THREE.Points(bEdgeGeom, bEdgeMat);
+  barthEdgeMesh.frustumCulled = false;
+
+  function rebuildBarthColors() {
+    let idx = 0;
+    for (let j = 0; j < BARTH_NV1; j++) {
+      for (let i = 0; i < BARTH_NU1; i++) {
+        const c = colorAt(i / BARTH_NU, j / BARTH_NV);
+        bColArr[idx*3] = c.r; bColArr[idx*3+1] = c.g; bColArr[idx*3+2] = c.b;
+        idx++;
+      }
+    }
+    bColAttr.needsUpdate = true;
+  }
+  rebuildBarthColors();
+
+  function largestPositiveRoot(A, w) {
+    const w2 = w * w;
+    const C = ONE_PLUS_2PHI * w2;
+    if (Math.abs(A) < 1e-7) return Math.sqrt(Math.min(w2, BARTH_S_MAX));
+    const a = 4 * A, b = -C, c = 2 * C * w2, d = -C * w2 * w2;
+    const p1 = b / a, p2 = c / a, p3 = d / a;
+    const shift = p1 / 3;
+    const p = p2 - p1 * p1 / 3;
+    const q = 2 * p1 * p1 * p1 / 27 - p1 * p2 / 3 + p3;
+    const hq = q * 0.5, tp = p / 3;
+    const Delta = hq * hq + tp * tp * tp;
+    let sMax = -1;
+    if (Delta > 1e-12) {
+      const sq = Math.sqrt(Delta);
+      const u = Math.cbrt(-hq + sq), v = Math.cbrt(-hq - sq);
+      sMax = u + v - shift;
+    } else if (Delta < -1e-12) {
+      const r3 = Math.sqrt(-tp);
+      if (r3 > 1e-10) {
+        const arg = Math.max(-1, Math.min(1, -hq / (r3 * r3 * r3)));
+        const theta = Math.acos(arg);
+        for (let k = 0; k < 3; k++) {
+          const tk = 2 * r3 * Math.cos((theta + 2 * Math.PI * k) / 3);
+          const s = tk - shift;
+          if (s > sMax) sMax = s;
+        }
+      } else sMax = -shift;
+    } else {
+      if (Math.abs(hq) < 1e-10) sMax = -shift;
+      else {
+        const u = Math.cbrt(-hq);
+        const s1 = 2 * u - shift, s2 = -u - shift;
+        sMax = Math.max(s1, s2);
+      }
+    }
+    if (sMax < BARTH_S_MIN) return null;
+    if (sMax > BARTH_S_MAX) sMax = BARTH_S_MAX;
+    return Math.sqrt(sMax);
+  }
+
+  function updateBarth(w) {
+    for (let idx = 0; idx < BARTH_VERTS; idx++) {
+      const r = largestPositiveRoot(bDirA[idx], w);
+      if (r === null) { bValidArr[idx] = 0; bRadArr[idx] = 0; }
+      else { bValidArr[idx] = 1; bRadArr[idx] = r; }
+    }
+    for (let pass = 0; pass < BARTH_SMOOTH_PASSES; pass++) {
+      for (let j = 0; j < BARTH_NV1; j++) {
+        const base = j * BARTH_NU1;
+        const prevRow = j > 0 ? (j - 1) * BARTH_NU1 : null;
+        const nextRow = j < BARTH_NV ? (j + 1) * BARTH_NU1 : null;
+        for (let i = 0; i < BARTH_NU1; i++) {
+          const idx = base + i;
+          if (!bValidArr[idx]) { bSmoothTmpArr[idx] = bRadArr[idx]; continue; }
+          const iL = (i - 1 + BARTH_NU) % BARTH_NU;
+          const iR = (i + 1) % BARTH_NU;
+          let sum = 0, cnt = 0;
+          if (bValidArr[base + iL]) { sum += bRadArr[base + iL]; cnt++; }
+          if (bValidArr[base + iR]) { sum += bRadArr[base + iR]; cnt++; }
+          if (prevRow !== null && bValidArr[prevRow + i]) { sum += bRadArr[prevRow + i]; cnt++; }
+          if (nextRow !== null && bValidArr[nextRow + i]) { sum += bRadArr[nextRow + i]; cnt++; }
+          if (cnt === 0) bSmoothTmpArr[idx] = bRadArr[idx];
+          else { const avg = sum / cnt; bSmoothTmpArr[idx] = bRadArr[idx] * BARTH_SMOOTH_KEEP + avg * BARTH_SMOOTH_BLEND; }
+        }
+      }
+      bRadArr.set(bSmoothTmpArr);
+    }
+    for (let idx = 0; idx < BARTH_VERTS; idx++) {
+      if (!bValidArr[idx]) { bPosArr[idx*3] = 0; bPosArr[idx*3+1] = 0; bPosArr[idx*3+2] = 0; }
+      else {
+        const r = bRadArr[idx];
+        bPosArr[idx*3] = bDirX[idx] * r; bPosArr[idx*3+1] = bDirY[idx] * r; bPosArr[idx*3+2] = bDirZ[idx] * r;
+      }
+    }
+    let ptr = 0;
+    for (let j = 0; j < BARTH_NV1; j++) {
+      const base = j * BARTH_NU1;
+      for (let i = 0; i < BARTH_NU; i++) {
+        if (bValidArr[base + i] && bValidArr[base + i + 1]) { bIdxArr[ptr++] = base + i; bIdxArr[ptr++] = base + i + 1; }
+      }
+    }
+    for (let j = 0; j < BARTH_NV; j++) {
+      const base = j * BARTH_NU1, next = (j + 1) * BARTH_NU1;
+      for (let i = 0; i < BARTH_NU1; i++) {
+        if (bValidArr[base + i] && bValidArr[next + i]) { bIdxArr[ptr++] = base + i; bIdxArr[ptr++] = next + i; }
+      }
+    }
+    bPosAttr.needsUpdate = true; bIdxAttr.needsUpdate = true; bGeom.setDrawRange(0, ptr);
+
+    let dotPtr = 0;
+    for (let j = 0; j <= BARTH_NV; j += BARTH_DOT_STRIDE_V) {
+      const base = j * BARTH_NU1;
+      for (let i = 0; i <= BARTH_NU; i += BARTH_DOT_STRIDE_U) {
+        const idx = base + i;
+        if (!bValidArr[idx]) continue;
+        if (dotPtr >= BARTH_MAX_DOTS) break;
+        bDotPosArr[dotPtr*3]   = bPosArr[idx*3];
+        bDotPosArr[dotPtr*3+1] = bPosArr[idx*3+1];
+        bDotPosArr[dotPtr*3+2] = bPosArr[idx*3+2];
+        bDotColArr[dotPtr*3]   = bColArr[idx*3];
+        bDotColArr[dotPtr*3+1] = bColArr[idx*3+1];
+        bDotColArr[dotPtr*3+2] = bColArr[idx*3+2];
+        dotPtr++;
+      }
+    }
+    bDotPosAttr.needsUpdate = true; bDotColAttr.needsUpdate = true; bDotGeom.setDrawRange(0, dotPtr);
+
+    let edgePtr = 0;
+    for (let j = 1; j < BARTH_NV; j++) {
+      const base = j * BARTH_NU1, prevRow = (j - 1) * BARTH_NU1, nextRow = (j + 1) * BARTH_NU1;
+      for (let i = 0; i < BARTH_NU; i++) {
+        const idx = base + i;
+        if (!bValidArr[idx]) continue;
+        const iL = (i - 1 + BARTH_NU) % BARTH_NU;
+        const iR = (i + 1) % BARTH_NU;
+        const hasL = bValidArr[base + iL], hasR = bValidArr[base + iR];
+        const hasD = bValidArr[prevRow + i], hasU = bValidArr[nextRow + i];
+        if (!hasL || !hasR || !hasD || !hasU) {
+          if (edgePtr >= BARTH_VERTS) break;
+          bEdgePosArr[edgePtr*3]   = bPosArr[idx*3];
+          bEdgePosArr[edgePtr*3+1] = bPosArr[idx*3+1];
+          bEdgePosArr[edgePtr*3+2] = bPosArr[idx*3+2];
+          bEdgeColArr[edgePtr*3]   = bColArr[idx*3];
+          bEdgeColArr[edgePtr*3+1] = bColArr[idx*3+1];
+          bEdgeColArr[edgePtr*3+2] = bColArr[idx*3+2];
+          edgePtr++;
+        }
+      }
+    }
+    bEdgePosAttr.needsUpdate = true; bEdgeColAttr.needsUpdate = true; bEdgeGeom.setDrawRange(0, edgePtr);
+  }
+
+  // ── Kummer Surface (Implicit) ──
+  const KUMMER_NU = 200;
+  const KUMMER_NV = 120;
+  const KUMMER_NU1 = KUMMER_NU + 1;
+  const KUMMER_NV1 = KUMMER_NV + 1;
+  const KUMMER_VERTS = KUMMER_NU1 * KUMMER_NV1;
+  const KUMMER_DOT_STRIDE = 2;
+  const KUMMER_MAX_DOTS = Math.ceil(KUMMER_NU1 / KUMMER_DOT_STRIDE) * Math.ceil(KUMMER_NV1 / KUMMER_DOT_STRIDE);
+
+  const kDirX = new Float32Array(KUMMER_VERTS);
+  const kDirY = new Float32Array(KUMMER_VERTS);
+  const kDirZ = new Float32Array(KUMMER_VERTS);
+  const kDirA = new Float32Array(KUMMER_VERTS);
+
+  (function precomputeKummer() {
+    let idx = 0;
+    for (let j = 0; j < KUMMER_NV1; j++) {
+      const theta = (j / KUMMER_NV) * Math.PI;
+      const sT = Math.sin(theta), cT = Math.cos(theta);
+      for (let i = 0; i < KUMMER_NU1; i++) {
+        const phi = (i / KUMMER_NU) * Math.PI * 2;
+        const sP = Math.sin(phi), cP = Math.cos(phi);
+        const X = sT * cP, Y = cT, Z = sT * sP;
+        kDirX[idx] = X; kDirY[idx] = Y; kDirZ[idx] = Z;
+        const X2 = X * X, Y2 = Y * Y, Z2 = Z * Z;
+        kDirA[idx] = (X2 - Y2) * (Y2 - Z2) * (Z2 - X2);
+        idx++;
+      }
+    }
+  })();
+
+  const kPosArr = new Float32Array(KUMMER_VERTS * 3);
+  const kColArr = new Float32Array(KUMMER_VERTS * 3);
+  const kValidArr = new Uint8Array(KUMMER_VERTS);
+  const kRadArr = new Float32Array(KUMMER_VERTS);
+
+  const kMaxSeg = KUMMER_NU * KUMMER_NV1 + KUMMER_NU1 * KUMMER_NV;
+  const kIdxArr = new Uint32Array(kMaxSeg * 2);
+
+  const kGeom = new THREE.BufferGeometry();
+  const kPosAttr = new THREE.BufferAttribute(kPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const kColAttr = new THREE.BufferAttribute(kColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const kIdxAttr = new THREE.BufferAttribute(kIdxArr, 1).setUsage(THREE.DynamicDrawUsage);
+  kGeom.setAttribute('position', kPosAttr);
+  kGeom.setAttribute('color', kColAttr);
+  kGeom.setIndex(kIdxAttr);
+  kGeom.setDrawRange(0, 0);
+
+  const kLineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+  const kummerMesh = new THREE.LineSegments(kGeom, kLineMat);
+  kummerMesh.frustumCulled = false;
+
+  const kDotPosArr = new Float32Array(KUMMER_MAX_DOTS * 3);
+  const kDotColArr = new Float32Array(KUMMER_MAX_DOTS * 3);
+  const kDotGeom = new THREE.BufferGeometry();
+  const kDotPosAttr = new THREE.BufferAttribute(kDotPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const kDotColAttr = new THREE.BufferAttribute(kDotColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  kDotGeom.setAttribute('position', kDotPosAttr);
+  kDotGeom.setAttribute('color', kDotColAttr);
+  kDotGeom.setDrawRange(0, 0);
+
+  const BASE_KUMMER_DOT = 0.078;
+  const kDotMat = new THREE.PointsMaterial({ size: BASE_KUMMER_DOT, map: softDot, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const kummerDotsMesh = new THREE.Points(kDotGeom, kDotMat);
+  kummerDotsMesh.frustumCulled = false;
+
+  const kEdgePosArr = new Float32Array(KUMMER_VERTS * 3);
+  const kEdgeColArr = new Float32Array(KUMMER_VERTS * 3);
+  const kEdgeGeom = new THREE.BufferGeometry();
+  const kEdgePosAttr = new THREE.BufferAttribute(kEdgePosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const kEdgeColAttr = new THREE.BufferAttribute(kEdgeColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  kEdgeGeom.setAttribute('position', kEdgePosAttr);
+  kEdgeGeom.setAttribute('color', kEdgeColAttr);
+  kEdgeGeom.setDrawRange(0, 0);
+
+  const BASE_KUMMER_EDGE = 0.16;
+  const kEdgeMat = new THREE.PointsMaterial({ size: BASE_KUMMER_EDGE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const kummerEdgeMesh = new THREE.Points(kEdgeGeom, kEdgeMat);
+  kummerEdgeMesh.frustumCulled = false;
+
+  let kummerActive = false;
+  let kummerLambda = 1.0;
+
+  function rebuildKummerColors() {
+    let idx = 0;
+    for (let j = 0; j < KUMMER_NV1; j++) {
+      for (let i = 0; i < KUMMER_NU1; i++) {
+        const c = colorAt(i / KUMMER_NU, j / KUMMER_NV);
+        kColArr[idx*3] = c.r; kColArr[idx*3+1] = c.g; kColArr[idx*3+2] = c.b;
+        idx++;
+      }
+    }
+    kColAttr.needsUpdate = true;
+  }
+  rebuildKummerColors();
+
+  function kummerLargestRoot(A, lambda) {
+    // Equation: s^2 - 2s + 1 - lambda * A * s^3 = 0
+    // => -lambda*A s^3 + s^2 - 2s + 1 = 0
+    const a = -lambda * A;
+    const b = 1, c = -2, d = 1;
+    if (Math.abs(a) < 1e-10) return 1.0; // s = 1 => r = 1
+    
+    const p1 = b / a, p2 = c / a, p3 = d / a;
+    const shift = p1 / 3;
+    const p = p2 - p1 * p1 / 3;
+    const q = 2 * p1 * p1 * p1 / 27 - p1 * p2 / 3 + p3;
+    const hq = q * 0.5, tp = p / 3;
+    const Delta = hq * hq + tp * tp * tp;
+    let best = -1;
+    if (Delta > 1e-12) {
+      const sq = Math.sqrt(Delta);
+      const u = Math.cbrt(-hq + sq), v = Math.cbrt(-hq - sq);
+      const s = u + v - shift;
+      if (s > 0) best = s;
+    } else if (Delta < -1e-12) {
+      const r3 = Math.sqrt(-tp);
+      if (r3 > 1e-10) {
+        const arg = Math.max(-1, Math.min(1, -hq / (r3 * r3 * r3)));
+        const theta = Math.acos(arg);
+        for (let k = 0; k < 3; k++) {
+          const s = 2 * r3 * Math.cos((theta + 2 * Math.PI * k) / 3) - shift;
+          if (s > 0 && s > best) best = s;
+        }
+      }
+    } else {
+      if (Math.abs(hq) < 1e-10) {
+        const s = -shift;
+        if (s > 0) best = s;
+      } else {
+        const u = Math.cbrt(-hq);
+        const s1 = 2 * u - shift, s2 = -u - shift;
+        if (s1 > 0 && s1 > best) best = s1;
+        if (s2 > 0 && s2 > best) best = s2;
+      }
+    }
+    return best > 0 ? Math.sqrt(best) : null;
+  }
+
+  function updateKummer(lambda) {
+    kummerLambda = lambda;
+    for (let idx = 0; idx < KUMMER_VERTS; idx++) {
+      const r = kummerLargestRoot(kDirA[idx], lambda);
+      if (r === null || !isFinite(r)) { kValidArr[idx] = 0; kRadArr[idx] = 0; }
+      else { kValidArr[idx] = 1; kRadArr[idx] = r; }
+    }
+    for (let idx = 0; idx < KUMMER_VERTS; idx++) {
+      if (!kValidArr[idx]) { kPosArr[idx*3] = 0; kPosArr[idx*3+1] = 0; kPosArr[idx*3+2] = 0; }
+      else {
+        const r = kRadArr[idx];
+        kPosArr[idx*3]   = kDirX[idx] * r;
+        kPosArr[idx*3+1] = kDirY[idx] * r;
+        kPosArr[idx*3+2] = kDirZ[idx] * r;
+      }
+    }
+    let ptr = 0;
+    for (let j = 0; j < KUMMER_NV1; j++) {
+      const base = j * KUMMER_NU1;
+      for (let i = 0; i < KUMMER_NU; i++) {
+        if (kValidArr[base + i] && kValidArr[base + i + 1]) { kIdxArr[ptr++] = base + i; kIdxArr[ptr++] = base + i + 1; }
+      }
+    }
+    for (let j = 0; j < KUMMER_NV; j++) {
+      const base = j * KUMMER_NU1, next = (j + 1) * KUMMER_NU1;
+      for (let i = 0; i < KUMMER_NU1; i++) {
+        if (kValidArr[base + i] && kValidArr[next + i]) { kIdxArr[ptr++] = base + i; kIdxArr[ptr++] = next + i; }
+      }
+    }
+    kPosAttr.needsUpdate = true; kIdxAttr.needsUpdate = true; kGeom.setDrawRange(0, ptr);
+
+    let dotPtr = 0;
+    for (let j = 0; j <= KUMMER_NV; j += KUMMER_DOT_STRIDE) {
+      const base = j * KUMMER_NU1;
+      for (let i = 0; i <= KUMMER_NU; i += KUMMER_DOT_STRIDE) {
+        const idx = base + i;
+        if (!kValidArr[idx]) continue;
+        if (dotPtr >= KUMMER_MAX_DOTS) break;
+        kDotPosArr[dotPtr*3]   = kPosArr[idx*3];
+        kDotPosArr[dotPtr*3+1] = kPosArr[idx*3+1];
+        kDotPosArr[dotPtr*3+2] = kPosArr[idx*3+2];
+        kDotColArr[dotPtr*3]   = kColArr[idx*3];
+        kDotColArr[dotPtr*3+1] = kColArr[idx*3+1];
+        kDotColArr[dotPtr*3+2] = kColArr[idx*3+2];
+        dotPtr++;
+      }
+    }
+    kDotPosAttr.needsUpdate = true; kDotColAttr.needsUpdate = true; kDotGeom.setDrawRange(0, dotPtr);
+
+    let edgePtr = 0;
+    for (let j = 1; j < KUMMER_NV; j++) {
+      const base = j * KUMMER_NU1, prevRow = (j - 1) * KUMMER_NU1, nextRow = (j + 1) * KUMMER_NU1;
+      for (let i = 0; i < KUMMER_NU; i++) {
+        const idx = base + i;
+        if (!kValidArr[idx]) continue;
+        const iL = (i - 1 + KUMMER_NU) % KUMMER_NU;
+        const iR = (i + 1) % KUMMER_NU;
+        const hasL = kValidArr[base + iL], hasR = kValidArr[base + iR];
+        const hasD = kValidArr[prevRow + i], hasU = kValidArr[nextRow + i];
+        if (!hasL || !hasR || !hasD || !hasU) {
+          if (edgePtr >= KUMMER_VERTS) break;
+          kEdgePosArr[edgePtr*3]   = kPosArr[idx*3];
+          kEdgePosArr[edgePtr*3+1] = kPosArr[idx*3+1];
+          kEdgePosArr[edgePtr*3+2] = kPosArr[idx*3+2];
+          kEdgeColArr[edgePtr*3]   = kColArr[idx*3];
+          kEdgeColArr[edgePtr*3+1] = kColArr[idx*3+1];
+          kEdgeColArr[edgePtr*3+2] = kColArr[idx*3+2];
+          edgePtr++;
+        }
+      }
+    }
+    kEdgePosAttr.needsUpdate = true; kEdgeColAttr.needsUpdate = true; kEdgeGeom.setDrawRange(0, edgePtr);
+  }
+
+  const CAYLEY_NU = 200;
+  const CAYLEY_NV = 120;
+  const CAYLEY_NU1 = CAYLEY_NU + 1;
+  const CAYLEY_NV1 = CAYLEY_NV + 1;
+  const CAYLEY_VERTS = CAYLEY_NU1 * CAYLEY_NV1;
+  const CAYLEY_DOT_STRIDE = 2;
+  const CAYLEY_MAX_DOTS = Math.ceil(CAYLEY_NU1 / CAYLEY_DOT_STRIDE) * Math.ceil(CAYLEY_NV1 / CAYLEY_DOT_STRIDE);
+
+  const cDirX = new Float32Array(CAYLEY_VERTS);
+  const cDirY = new Float32Array(CAYLEY_VERTS);
+  const cDirZ = new Float32Array(CAYLEY_VERTS);
+  const cDirA = new Float32Array(CAYLEY_VERTS);
+
+  (function precomputeCayley() {
+    let idx = 0;
+    for (let j = 0; j < CAYLEY_NV1; j++) {
+      const theta = (j / CAYLEY_NV) * Math.PI;
+      const sT = Math.sin(theta), cT = Math.cos(theta);
+      for (let i = 0; i < CAYLEY_NU1; i++) {
+        const phi = (i / CAYLEY_NU) * Math.PI * 2;
+        const sP = Math.sin(phi), cP = Math.cos(phi);
+        const X = sT * cP, Y = cT, Z = sT * sP;
+        cDirX[idx] = X; cDirY[idx] = Y; cDirZ[idx] = Z;
+        cDirA[idx] = X * Y * Z;
+        idx++;
+      }
+    }
+  })();
+
+  const cPosArr = new Float32Array(CAYLEY_VERTS * 3);
+  const cColArr = new Float32Array(CAYLEY_VERTS * 3);
+  const cValidArr = new Uint8Array(CAYLEY_VERTS);
+  const cRadArr = new Float32Array(CAYLEY_VERTS);
+
+  const cMaxSeg = CAYLEY_NU * CAYLEY_NV1 + CAYLEY_NU1 * CAYLEY_NV;
+  const cIdxArr = new Uint32Array(cMaxSeg * 2);
+
+  const cGeom = new THREE.BufferGeometry();
+  const cPosAttr = new THREE.BufferAttribute(cPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const cColAttr = new THREE.BufferAttribute(cColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const cIdxAttr = new THREE.BufferAttribute(cIdxArr, 1).setUsage(THREE.DynamicDrawUsage);
+  cGeom.setAttribute('position', cPosAttr);
+  cGeom.setAttribute('color', cColAttr);
+  cGeom.setIndex(cIdxAttr);
+  cGeom.setDrawRange(0, 0);
+
+  const cLineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+  const cayleyMesh = new THREE.LineSegments(cGeom, cLineMat);
+  cayleyMesh.frustumCulled = false;
+
+  const cDotPosArr = new Float32Array(CAYLEY_MAX_DOTS * 3);
+  const cDotColArr = new Float32Array(CAYLEY_MAX_DOTS * 3);
+  const cDotGeom = new THREE.BufferGeometry();
+  const cDotPosAttr = new THREE.BufferAttribute(cDotPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const cDotColAttr = new THREE.BufferAttribute(cDotColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  cDotGeom.setAttribute('position', cDotPosAttr);
+  cDotGeom.setAttribute('color', cDotColAttr);
+  cDotGeom.setDrawRange(0, 0);
+
+  const BASE_CAYLEY_DOT = 0.078;
+  const cDotMat = new THREE.PointsMaterial({ size: BASE_CAYLEY_DOT, map: softDot, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const cayleyDotsMesh = new THREE.Points(cDotGeom, cDotMat);
+  cayleyDotsMesh.frustumCulled = false;
+
+  const cEdgePosArr = new Float32Array(CAYLEY_VERTS * 3);
+  const cEdgeColArr = new Float32Array(CAYLEY_VERTS * 3);
+  const cEdgeGeom = new THREE.BufferGeometry();
+  const cEdgePosAttr = new THREE.BufferAttribute(cEdgePosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const cEdgeColAttr = new THREE.BufferAttribute(cEdgeColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  cEdgeGeom.setAttribute('position', cEdgePosAttr);
+  cEdgeGeom.setAttribute('color', cEdgeColAttr);
+  cEdgeGeom.setDrawRange(0, 0);
+
+  const BASE_CAYLEY_EDGE = 0.16;
+  const cEdgeMat = new THREE.PointsMaterial({ size: BASE_CAYLEY_EDGE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const cayleyEdgeMesh = new THREE.Points(cEdgeGeom, cEdgeMat);
+  cayleyEdgeMesh.frustumCulled = false;
+
+  let cayleyActive = false;
+  let cayleyC = 16;
+  let cayleyPhase = 0;
+
+  function rebuildCayleyColors() {
+    let idx = 0;
+    for (let j = 0; j < CAYLEY_NV1; j++) {
+      for (let i = 0; i < CAYLEY_NU1; i++) {
+        const c = colorAt(i / CAYLEY_NU, j / CAYLEY_NV);
+        cColArr[idx*3] = c.r; cColArr[idx*3+1] = c.g; cColArr[idx*3+2] = c.b;
+        idx++;
+      }
+    }
+    cColAttr.needsUpdate = true;
+  }
+  rebuildCayleyColors();
+
+  function cayleyLargestRoot(A, c) {
+    const D = c * A;
+    if (Math.abs(D) < 1e-10) return 0.5;
+    const a = D, b = 4, cc = 0, d = -1;
+    const p1 = b / a, p2 = cc / a, p3 = d / a;
+    const shift = p1 / 3;
+    const p = p2 - p1 * p1 / 3;
+    const q = 2 * p1 * p1 * p1 / 27 - p1 * p2 / 3 + p3;
+    const hq = q * 0.5, tp = p / 3;
+    const Delta = hq * hq + tp * tp * tp;
+    let roots = [];
+    if (Delta > 1e-12) {
+      const sq = Math.sqrt(Delta);
+      const u = Math.cbrt(-hq + sq), v = Math.cbrt(-hq - sq);
+      roots.push(u + v - shift);
+    } else if (Delta < -1e-12) {
+      const r3 = Math.sqrt(-tp);
+      if (r3 > 1e-10) {
+        const arg = Math.max(-1, Math.min(1, -hq / (r3 * r3 * r3)));
+        const theta = Math.acos(arg);
+        for (let k = 0; k < 3; k++) roots.push(2 * r3 * Math.cos((theta + 2 * Math.PI * k) / 3) - shift);
+      } else roots.push(-shift);
+    } else {
+      if (Math.abs(hq) < 1e-10) roots.push(-shift);
+      else {
+        const u = Math.cbrt(-hq);
+        roots.push(2 * u - shift);
+        roots.push(-u - shift);
+      }
+    }
+    let best = -1;
+    for (const r of roots) if (r > 0 && r > best) best = r;
+    return best > 0 ? best : null;
+  }
+
+  function updateCayley(c) {
+    cayleyC = c;
+    for (let idx = 0; idx < CAYLEY_VERTS; idx++) {
+      const r = cayleyLargestRoot(cDirA[idx], c);
+      if (r === null) { cValidArr[idx] = 0; cRadArr[idx] = 0; }
+      else { cValidArr[idx] = 1; cRadArr[idx] = r; }
+    }
+    for (let idx = 0; idx < CAYLEY_VERTS; idx++) {
+      if (!cValidArr[idx]) { cPosArr[idx*3] = 0; cPosArr[idx*3+1] = 0; cPosArr[idx*3+2] = 0; }
+      else {
+        const r = cRadArr[idx];
+        cPosArr[idx*3]   = cDirX[idx] * r;
+        cPosArr[idx*3+1] = cDirY[idx] * r;
+        cPosArr[idx*3+2] = cDirZ[idx] * r;
+      }
+    }
+    let ptr = 0;
+    for (let j = 0; j < CAYLEY_NV1; j++) {
+      const base = j * CAYLEY_NU1;
+      for (let i = 0; i < CAYLEY_NU; i++) {
+        if (cValidArr[base + i] && cValidArr[base + i + 1]) { cIdxArr[ptr++] = base + i; cIdxArr[ptr++] = base + i + 1; }
+      }
+    }
+    for (let j = 0; j < CAYLEY_NV; j++) {
+      const base = j * CAYLEY_NU1, next = (j + 1) * CAYLEY_NU1;
+      for (let i = 0; i < CAYLEY_NU1; i++) {
+        if (cValidArr[base + i] && cValidArr[next + i]) { cIdxArr[ptr++] = base + i; cIdxArr[ptr++] = next + i; }
+      }
+    }
+    cPosAttr.needsUpdate = true; cIdxAttr.needsUpdate = true; cGeom.setDrawRange(0, ptr);
+
+    let dotPtr = 0;
+    for (let j = 0; j <= CAYLEY_NV; j += CAYLEY_DOT_STRIDE) {
+      const base = j * CAYLEY_NU1;
+      for (let i = 0; i <= CAYLEY_NU; i += CAYLEY_DOT_STRIDE) {
+        const idx = base + i;
+        if (!cValidArr[idx]) continue;
+        if (dotPtr >= CAYLEY_MAX_DOTS) break;
+        cDotPosArr[dotPtr*3]   = cPosArr[idx*3];
+        cDotPosArr[dotPtr*3+1] = cPosArr[idx*3+1];
+        cDotPosArr[dotPtr*3+2] = cPosArr[idx*3+2];
+        cDotColArr[dotPtr*3]   = cColArr[idx*3];
+        cDotColArr[dotPtr*3+1] = cColArr[idx*3+1];
+        cDotColArr[dotPtr*3+2] = cColArr[idx*3+2];
+        dotPtr++;
+      }
+    }
+    cDotPosAttr.needsUpdate = true; cDotColAttr.needsUpdate = true; cDotGeom.setDrawRange(0, dotPtr);
+
+    let edgePtr = 0;
+    for (let j = 1; j < CAYLEY_NV; j++) {
+      const base = j * CAYLEY_NU1, prevRow = (j - 1) * CAYLEY_NU1, nextRow = (j + 1) * CAYLEY_NU1;
+      for (let i = 0; i < CAYLEY_NU; i++) {
+        const idx = base + i;
+        if (!cValidArr[idx]) continue;
+        const iL = (i - 1 + CAYLEY_NU) % CAYLEY_NU;
+        const iR = (i + 1) % CAYLEY_NU;
+        const hasL = cValidArr[base + iL], hasR = cValidArr[base + iR];
+        const hasD = cValidArr[prevRow + i], hasU = cValidArr[nextRow + i];
+        if (!hasL || !hasR || !hasD || !hasU) {
+          if (edgePtr >= CAYLEY_VERTS) break;
+          cEdgePosArr[edgePtr*3]   = cPosArr[idx*3];
+          cEdgePosArr[edgePtr*3+1] = cPosArr[idx*3+1];
+          cEdgePosArr[edgePtr*3+2] = cPosArr[idx*3+2];
+          cEdgeColArr[edgePtr*3]   = cColArr[idx*3];
+          cEdgeColArr[edgePtr*3+1] = cColArr[idx*3+1];
+          cEdgeColArr[edgePtr*3+2] = cColArr[idx*3+2];
+          edgePtr++;
+        }
+      }
+    }
+    cEdgePosAttr.needsUpdate = true; cEdgeColAttr.needsUpdate = true; cEdgeGeom.setDrawRange(0, edgePtr);
+  }
+
+  const CLEBSCH_NU = 140;
+  const CLEBSCH_NV = 144;
+  const CLEBSCH_NU1 = CLEBSCH_NU + 1;
+  const CLEBSCH_NV1 = CLEBSCH_NV + 1;
+  const CLEBSCH_VERTS = CLEBSCH_NU1 * CLEBSCH_NV1;
+  const CLEBSCH_R_MAX = 3.0;
+  const CLEBSCH_R_MIN = 1e-3;
+  const CLEBSCH_DOT_STRIDE_U = 8;
+  const CLEBSCH_DOT_STRIDE_V = 8;
+  const CLEBSCH_MAX_DOTS = Math.ceil(CLEBSCH_NU1 / CLEBSCH_DOT_STRIDE_U) * Math.ceil(CLEBSCH_NV1 / CLEBSCH_DOT_STRIDE_V);
+
+  const clPosArr = new Float32Array(CLEBSCH_VERTS * 3);
+  const clColArr = new Float32Array(CLEBSCH_VERTS * 3);
+  const clValidArr = new Uint8Array(CLEBSCH_VERTS);
+  const clRadArr = new Float32Array(CLEBSCH_VERTS);
+
+  const clMaxSeg = CLEBSCH_NU * CLEBSCH_NV1 + CLEBSCH_NU1 * CLEBSCH_NV;
+  const clIdxArr = new Uint32Array(clMaxSeg * 2);
+
+  const clGeom = new THREE.BufferGeometry();
+  const clPosAttr = new THREE.BufferAttribute(clPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const clColAttr = new THREE.BufferAttribute(clColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const clIdxAttr = new THREE.BufferAttribute(clIdxArr, 1).setUsage(THREE.DynamicDrawUsage);
+  clGeom.setAttribute('position', clPosAttr);
+  clGeom.setAttribute('color', clColAttr);
+  clGeom.setIndex(clIdxAttr);
+  clGeom.setDrawRange(0, 0);
+
+  const clLineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+  const clebschMesh = new THREE.LineSegments(clGeom, clLineMat);
+  clebschMesh.frustumCulled = false;
+
+  const clDotPosArr = new Float32Array(CLEBSCH_MAX_DOTS * 3);
+  const clDotColArr = new Float32Array(CLEBSCH_MAX_DOTS * 3);
+  const clDotGeom = new THREE.BufferGeometry();
+  const clDotPosAttr = new THREE.BufferAttribute(clDotPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const clDotColAttr = new THREE.BufferAttribute(clDotColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  clDotGeom.setAttribute('position', clDotPosAttr);
+  clDotGeom.setAttribute('color', clDotColAttr);
+  clDotGeom.setDrawRange(0, 0);
+
+  const BASE_CLEBSCH_DOT = 0.221;
+  const clDotMat = new THREE.PointsMaterial({ size: BASE_CLEBSCH_DOT, map: softDot, vertexColors: true, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const clebschDotsMesh = new THREE.Points(clDotGeom, clDotMat);
+  clebschDotsMesh.frustumCulled = false;
+
+  const clEdgePosArr = new Float32Array(CLEBSCH_VERTS * 3);
+  const clEdgeColArr = new Float32Array(CLEBSCH_VERTS * 3);
+  const clEdgeGeom = new THREE.BufferGeometry();
+  const clEdgePosAttr = new THREE.BufferAttribute(clEdgePosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const clEdgeColAttr = new THREE.BufferAttribute(clEdgeColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  clEdgeGeom.setAttribute('position', clEdgePosAttr);
+  clEdgeGeom.setAttribute('color', clEdgeColAttr);
+  clEdgeGeom.setDrawRange(0, 0);
+
+  const BASE_CLEBSCH_EDGE = 0.005;
+  const clEdgeMat = new THREE.PointsMaterial({ size: BASE_CLEBSCH_EDGE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const clebschEdgeMesh = new THREE.Points(clEdgeGeom, clEdgeMat);
+  clebschEdgeMesh.frustumCulled = false;
+
+  let clebschActive = false;
+
+  function rebuildClebschColors() {
+    let idx = 0;
+    for (let j = 0; j < CLEBSCH_NV1; j++) {
+      for (let i = 0; i < CLEBSCH_NU1; i++) {
+        const c = colorAt(i / CLEBSCH_NU, j / CLEBSCH_NV);
+        clColArr[idx*3] = c.r; clColArr[idx*3+1] = c.g; clColArr[idx*3+2] = c.b;
+        idx++;
+      }
+    }
+    clColAttr.needsUpdate = true;
+  }
+  rebuildClebschColors();
+
+  function clebschLargestRoot(a, b, c) {
+    const EPS = 1e-9;
+    if (Math.abs(a) < EPS) {
+      if (Math.abs(b) < EPS) {
+        if (Math.abs(c) < EPS) return null;
+        const t = -1 / c;
+        return t > CLEBSCH_R_MIN ? Math.min(t, CLEBSCH_R_MAX) : null;
+      }
+      const disc = c * c - 4 * b;
+      if (disc < 0) return null;
+      const sq = Math.sqrt(disc);
+      const t1 = (-c + sq) / (2 * b);
+      const t2 = (-c - sq) / (2 * b);
+      let best = -1;
+      if (t1 > 0 && t1 > best) best = t1;
+      if (t2 > 0 && t2 > best) best = t2;
+      if (best <= CLEBSCH_R_MIN) return null;
+      return Math.min(best, CLEBSCH_R_MAX);
+    }
+    const a2 = a * a, a3 = a2 * a;
+    const b3a = b / (3 * a);
+    const p = c / a - b * b / (3 * a2);
+    const q = 2 * b * b * b / (27 * a3) - b * c / (3 * a2) + 1 / a;
+    const hq = q * 0.5, tp = p / 3;
+    const Delta = hq * hq + tp * tp * tp;
+    let best = -1;
+    if (Delta > 1e-12) {
+      const sq = Math.sqrt(Delta);
+      const u = Math.cbrt(-hq + sq), v = Math.cbrt(-hq - sq);
+      const t = u + v - b3a;
+      if (t > 0) best = t;
+    } else if (Delta < -1e-12) {
+      const r3 = Math.sqrt(-tp);
+      if (r3 > 1e-10) {
+        const arg = Math.max(-1, Math.min(1, -hq / (r3 * r3 * r3)));
+        const theta = Math.acos(arg);
+        for (let k = 0; k < 3; k++) {
+          const t = 2 * r3 * Math.cos((theta + 2 * Math.PI * k) / 3) - b3a;
+          if (t > 0 && t > best) best = t;
+        }
+      }
+    } else {
+      if (Math.abs(hq) < 1e-10) {
+        const t = -b3a;
+        if (t > 0) best = t;
+      } else {
+        const u = Math.cbrt(-hq);
+        const t1 = 2 * u - b3a, t2 = -u - b3a;
+        if (t1 > 0 && t1 > best) best = t1;
+        if (t2 > 0 && t2 > best) best = t2;
+      }
+    }
+    if (best <= CLEBSCH_R_MIN) return null;
+    return Math.min(best, CLEBSCH_R_MAX);
+  }
+
+  function updateClebsch() {
+    for (let j = 0; j < CLEBSCH_NV1; j++) {
+      const theta = (j / CLEBSCH_NV) * Math.PI;
+      const sT = Math.sin(theta), cT = Math.cos(theta);
+      const rowBase = j * CLEBSCH_NU1;
+      for (let i = 0; i < CLEBSCH_NU1; i++) {
+        const phi = (i / CLEBSCH_NU) * Math.PI * 2;
+        const sP = Math.sin(phi), cP = Math.cos(phi);
+        const X = sT * cP, Y = cT, Z = sT * sP;
+        const X2 = X * X, Y2 = Y * Y, Z2 = Z * Z;
+        const a = 81 * (X2 * X + Y2 * Y + Z2 * Z)
+                - 189 * (X2 * Y + X2 * Z + Y2 * X + Y2 * Z + Z2 * X + Z2 * Y)
+                + 54 * X * Y * Z;
+        const b = 126 * (X * Y + X * Z + Y * Z) - 9 * (X2 + Y2 + Z2);
+        const c = -9 * (X + Y + Z);
+        const r = clebschLargestRoot(a, b, c);
+        const idx = rowBase + i;
+        if (r === null) {
+          clValidArr[idx] = 0;
+          clRadArr[idx] = 0;
+          clPosArr[idx*3] = 0; clPosArr[idx*3+1] = 0; clPosArr[idx*3+2] = 0;
+        } else {
+          clValidArr[idx] = 1;
+          clRadArr[idx] = r;
+          clPosArr[idx*3]   = X * r;
+          clPosArr[idx*3+1] = Y * r;
+          clPosArr[idx*3+2] = Z * r;
+        }
+      }
+    }
+    let ptr = 0;
+    for (let j = 0; j < CLEBSCH_NV1; j++) {
+      const base = j * CLEBSCH_NU1;
+      for (let i = 0; i < CLEBSCH_NU; i++) {
+        if (clValidArr[base + i] && clValidArr[base + i + 1]) { clIdxArr[ptr++] = base + i; clIdxArr[ptr++] = base + i + 1; }
+      }
+    }
+    for (let j = 0; j < CLEBSCH_NV; j++) {
+      const base = j * CLEBSCH_NU1, next = (j + 1) * CLEBSCH_NU1;
+      for (let i = 0; i < CLEBSCH_NU1; i++) {
+        if (clValidArr[base + i] && clValidArr[next + i]) { clIdxArr[ptr++] = base + i; clIdxArr[ptr++] = next + i; }
+      }
+    }
+    clPosAttr.needsUpdate = true; clIdxAttr.needsUpdate = true; clGeom.setDrawRange(0, ptr);
+
+    let dotPtr = 0;
+    for (let j = 0; j <= CLEBSCH_NV; j += CLEBSCH_DOT_STRIDE_V) {
+      const base = j * CLEBSCH_NU1;
+      for (let i = 0; i <= CLEBSCH_NU; i += CLEBSCH_DOT_STRIDE_U) {
+        const idx = base + i;
+        if (!clValidArr[idx]) continue;
+        if (dotPtr >= CLEBSCH_MAX_DOTS) break;
+        clDotPosArr[dotPtr*3]   = clPosArr[idx*3];
+        clDotPosArr[dotPtr*3+1] = clPosArr[idx*3+1];
+        clDotPosArr[dotPtr*3+2] = clPosArr[idx*3+2];
+        clDotColArr[dotPtr*3]   = clColArr[idx*3];
+        clDotColArr[dotPtr*3+1] = clColArr[idx*3+1];
+        clDotColArr[dotPtr*3+2] = clColArr[idx*3+2];
+        dotPtr++;
+      }
+    }
+    clDotPosAttr.needsUpdate = true; clDotColAttr.needsUpdate = true; clDotGeom.setDrawRange(0, dotPtr);
+
+    let edgePtr = 0;
+    for (let j = 1; j < CLEBSCH_NV; j++) {
+      const base = j * CLEBSCH_NU1, prevRow = (j - 1) * CLEBSCH_NU1, nextRow = (j + 1) * CLEBSCH_NU1;
+      for (let i = 0; i < CLEBSCH_NU; i++) {
+        const idx = base + i;
+        if (!clValidArr[idx]) continue;
+        const iL = (i - 1 + CLEBSCH_NU) % CLEBSCH_NU;
+        const iR = (i + 1) % CLEBSCH_NU;
+        const hasL = clValidArr[base + iL], hasR = clValidArr[base + iR];
+        const hasD = clValidArr[prevRow + i], hasU = clValidArr[nextRow + i];
+        if (!hasL || !hasR || !hasD || !hasU) {
+          if (edgePtr >= CLEBSCH_VERTS) break;
+          clEdgePosArr[edgePtr*3]   = clPosArr[idx*3];
+          clEdgePosArr[edgePtr*3+1] = clPosArr[idx*3+1];
+          clEdgePosArr[edgePtr*3+2] = clPosArr[idx*3+2];
+          clEdgeColArr[edgePtr*3]   = clColArr[idx*3];
+          clEdgeColArr[edgePtr*3+1] = clColArr[idx*3+1];
+          clEdgeColArr[edgePtr*3+2] = clColArr[idx*3+2];
+          edgePtr++;
+        }
+      }
+    }
+    clEdgePosAttr.needsUpdate = true; clEdgeColAttr.needsUpdate = true; clEdgeGeom.setDrawRange(0, edgePtr);
+  }
+
+  // ── López–Ros three-ended minimal surface ──
+  const LOPEZ_NU = 256;
+  const LOPEZ_NV = 192;
+  const LOPEZ_NU1 = LOPEZ_NU + 1;
+  const LOPEZ_NV1 = LOPEZ_NV + 1;
+  const LOPEZ_VERTS = LOPEZ_NU1 * LOPEZ_NV1;
+  const LOPEZ_RIN = 0.15;
+  const LOPEZ_ROUT = 3.5;
+  const LOPEZ_DOT_STRIDE_U = 4;
+  const LOPEZ_DOT_STRIDE_V = 4;
+  const LOPEZ_MAX_DOTS = Math.ceil(LOPEZ_NU1 / LOPEZ_DOT_STRIDE_U) * Math.ceil(LOPEZ_NV1 / LOPEZ_DOT_STRIDE_V);
+
+  const lPosArr = new Float32Array(LOPEZ_VERTS * 3);
+  const lColArr = new Float32Array(LOPEZ_VERTS * 3);
+  const lValidArr = new Uint8Array(LOPEZ_VERTS);
+
+  const lMaxSeg = LOPEZ_NU * LOPEZ_NV1 + LOPEZ_NU1 * LOPEZ_NV;
+  const lIdxArr = new Uint32Array(lMaxSeg * 2);
+
+  const lGeom = new THREE.BufferGeometry();
+  const lPosAttr = new THREE.BufferAttribute(lPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const lColAttr = new THREE.BufferAttribute(lColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const lIdxAttr = new THREE.BufferAttribute(lIdxArr, 1).setUsage(THREE.DynamicDrawUsage);
+  lGeom.setAttribute('position', lPosAttr);
+  lGeom.setAttribute('color', lColAttr);
+  lGeom.setIndex(lIdxAttr);
+  lGeom.setDrawRange(0, 0);
+
+  const lLineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+  const lopezMesh = new THREE.LineSegments(lGeom, lLineMat);
+  lopezMesh.frustumCulled = false;
+
+  const lDotPosArr = new Float32Array(LOPEZ_MAX_DOTS * 3);
+  const lDotColArr = new Float32Array(LOPEZ_MAX_DOTS * 3);
+  const lDotGeom = new THREE.BufferGeometry();
+  const lDotPosAttr = new THREE.BufferAttribute(lDotPosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const lDotColAttr = new THREE.BufferAttribute(lDotColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  lDotGeom.setAttribute('position', lDotPosAttr);
+  lDotGeom.setAttribute('color', lDotColAttr);
+  lDotGeom.setDrawRange(0, 0);
+
+  const BASE_LOPEZ_DOT = 0.085;
+  const lDotMat = new THREE.PointsMaterial({ size: BASE_LOPEZ_DOT, map: softDot, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const lopezDotsMesh = new THREE.Points(lDotGeom, lDotMat);
+  lopezDotsMesh.frustumCulled = false;
+
+  const lEdgePosArr = new Float32Array(LOPEZ_VERTS * 3);
+  const lEdgeColArr = new Float32Array(LOPEZ_VERTS * 3);
+  const lEdgeGeom = new THREE.BufferGeometry();
+  const lEdgePosAttr = new THREE.BufferAttribute(lEdgePosArr, 3).setUsage(THREE.DynamicDrawUsage);
+  const lEdgeColAttr = new THREE.BufferAttribute(lEdgeColArr, 3).setUsage(THREE.DynamicDrawUsage);
+  lEdgeGeom.setAttribute('position', lEdgePosAttr);
+  lEdgeGeom.setAttribute('color', lEdgeColAttr);
+  lEdgeGeom.setDrawRange(0, 0);
+
+  const BASE_LOPEZ_EDGE = 0.16;
+  const lEdgeMat = new THREE.PointsMaterial({ size: BASE_LOPEZ_EDGE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const lopezEdgeMesh = new THREE.Points(lEdgeGeom, lEdgeMat);
+  lopezEdgeMesh.frustumCulled = false;
+
+  let lopezActive = false;
+  let lopezE = 1.0;
+  let lopezStartT = -1;
+  let lastLopezFormula = -1;
+  let lastLopezUpdate = -1;
+  const LOPEZ_PERIOD = 20.0;
+  const LOPEZ_UPDATE_INTERVAL = 1 / 30;
+
+  function rebuildLopezColors() {
+    let idx = 0;
+    for (let j = 0; j < LOPEZ_NV1; j++) {
+      for (let i = 0; i < LOPEZ_NU1; i++) {
+        const c = colorAt(i / LOPEZ_NU, j / LOPEZ_NV);
+        lColArr[idx*3] = c.r; lColArr[idx*3+1] = c.g; lColArr[idx*3+2] = c.b;
+        idx++;
+      }
+    }
+    lColAttr.needsUpdate = true;
+  }
+  rebuildLopezColors();
+
+    function lopezPoint(zr, zi, e) {
+    const e2 = e * e, e4 = e2 * e2;
+    const z2r = zr * zr - zi * zi;
+    const z2i = 2 * zr * zi;
+    const z3r = z2r * zr - z2i * zi;
+    const z3i = z2r * zi + z2i * zr;
+
+    const wr = z2r - e2;
+    const wi = z2i;
+    const wm2 = wr * wr + wi * wi;
+    if (!(wm2 > 1e-14)) return null;
+    
+    const invwr = wr / wm2, invwi = -wi / wm2;
+    const ziwr = zr * invwr - zi * invwi;
+    const ziwim = zr * invwi + zi * invwr;
+
+    const ar = zr - e, ai = zi;
+    const br = zr + e, bi = zi;
+    const bm2 = br * br + bi * bi;
+    if (!(bm2 > 1e-14)) return null;
+    
+    const rr = (ar * br + ai * bi) / bm2;
+    const ri = (ai * br - ar * bi) / bm2;
+    const rm2 = rr * rr + ri * ri;
+    if (!(rm2 > 1e-14)) return null;
+    
+    const Lre = 0.5 * Math.log(rm2);
+    const Lim = Math.atan2(ri, rr);
+
+    // Z = Re(Integral of G*dh)
+    const J1re = (zr + 0.5 * e * Lre) / (2 * e2);
+
+    // X + iY = Integral of (1-G^2)dh / 2
+    const term1re = Lre / (8 * e);
+    const term1im = Lim / (8 * e);
+    const term2re = -ziwr / 4;
+    const term2im = -ziwim / 4;
+    const term3re = -z3r / (24 * e4);
+    const term3im = -z3i / (24 * e4);
+
+    const X = term1re + term2re + term3re;
+    const Y = term1im + term2im + term3im;
+    const Z = J1re;
+
+    if (!isFinite(X) || !isFinite(Y) || !isFinite(Z)) return null;
+    return [X, Y, Z];
+  }
+
+  function updateLopez(e) {
+    const RIN2 = LOPEZ_RIN * LOPEZ_RIN;
+    const ROUT2 = LOPEZ_ROUT * LOPEZ_ROUT;
+    for (let j = 0; j < LOPEZ_NV1; j++) {
+      const th = (j / LOPEZ_NV) * Math.PI;
+      const s = (j === LOPEZ_NV) ? 1e9 : Math.tan(th * 0.5);
+      const base = j * LOPEZ_NU1;
+      for (let i = 0; i < LOPEZ_NU1; i++) {
+        const ph = (i / LOPEZ_NU) * Math.PI * 2;
+        const zr = s * Math.cos(ph), zi = s * Math.sin(ph);
+        const idx = base + i;
+        const dp = (zr - e) * (zr - e) + zi * zi;
+        const dm = (zr + e) * (zr + e) + zi * zi;
+        const r2 = zr * zr + zi * zi;
+        let ok = isFinite(zr) && isFinite(zi) && dp >= RIN2 && dm >= RIN2 && r2 <= ROUT2;
+        let p = null;
+        if (ok) p = lopezPoint(zr, zi, e);
+        if (!p) {
+          lValidArr[idx] = 0;
+          lPosArr[idx*3] = 0; lPosArr[idx*3+1] = 0; lPosArr[idx*3+2] = 0;
+          continue;
+        }
+        lValidArr[idx] = 1;
+        lPosArr[idx*3]   = p[0];
+        lPosArr[idx*3+1] = p[1];
+        lPosArr[idx*3+2] = p[2];
+      }
+    }
+    let ptr = 0;
+    const MAX_DIST_SQ = 0.5;
+    for (let j = 0; j < LOPEZ_NV1; j++) {
+      const base = j * LOPEZ_NU1;
+      for (let i = 0; i < LOPEZ_NU; i++) {
+        const idx1 = base + i;
+        const idx2 = base + i + 1;
+        if (lValidArr[idx1] && lValidArr[idx2]) {
+          const dx = lPosArr[idx2*3] - lPosArr[idx1*3];
+          const dy = lPosArr[idx2*3+1] - lPosArr[idx1*3+1];
+          const dz = lPosArr[idx2*3+2] - lPosArr[idx1*3+2];
+          if (dx*dx + dy*dy + dz*dz < MAX_DIST_SQ) {
+            lIdxArr[ptr++] = idx1; lIdxArr[ptr++] = idx2;
+          }
+        }
+      }
+    }
+    for (let j = 0; j < LOPEZ_NV; j++) {
+      const base = j * LOPEZ_NU1, next = (j + 1) * LOPEZ_NU1;
+      for (let i = 0; i < LOPEZ_NU1; i++) {
+        const idx1 = base + i;
+        const idx2 = next + i;
+        if (lValidArr[idx1] && lValidArr[idx2]) {
+          const dx = lPosArr[idx2*3] - lPosArr[idx1*3];
+          const dy = lPosArr[idx2*3+1] - lPosArr[idx1*3+1];
+          const dz = lPosArr[idx2*3+2] - lPosArr[idx1*3+2];
+          if (dx*dx + dy*dy + dz*dz < MAX_DIST_SQ) {
+            lIdxArr[ptr++] = idx1; lIdxArr[ptr++] = idx2;
+          }
+        }
+      }
+    }
+    lPosAttr.needsUpdate = true; lIdxAttr.needsUpdate = true; lGeom.setDrawRange(0, ptr);
+
+    let dotPtr = 0;
+    for (let j = 0; j <= LOPEZ_NV; j += LOPEZ_DOT_STRIDE_V) {
+      const base = j * LOPEZ_NU1;
+      for (let i = 0; i <= LOPEZ_NU; i += LOPEZ_DOT_STRIDE_U) {
+        const idx = base + i;
+        if (!lValidArr[idx]) continue;
+        if (dotPtr >= LOPEZ_MAX_DOTS) break;
+        lDotPosArr[dotPtr*3]   = lPosArr[idx*3];
+        lDotPosArr[dotPtr*3+1] = lPosArr[idx*3+1];
+        lDotPosArr[dotPtr*3+2] = lPosArr[idx*3+2];
+        lDotColArr[dotPtr*3]   = lColArr[idx*3];
+        lDotColArr[dotPtr*3+1] = lColArr[idx*3+1];
+        lDotColArr[dotPtr*3+2] = lColArr[idx*3+2];
+        dotPtr++;
+      }
+    }
+    lDotPosAttr.needsUpdate = true; lDotColAttr.needsUpdate = true; lDotGeom.setDrawRange(0, dotPtr);
+
+    let edgePtr = 0;
+    for (let j = 1; j < LOPEZ_NV; j++) {
+      const base = j * LOPEZ_NU1, prevRow = (j - 1) * LOPEZ_NU1, nextRow = (j + 1) * LOPEZ_NU1;
+      for (let i = 0; i < LOPEZ_NU; i++) {
+        const idx = base + i;
+        if (!lValidArr[idx]) continue;
+        const iL = (i - 1 + LOPEZ_NU) % LOPEZ_NU;
+        const iR = (i + 1) % LOPEZ_NU;
+        const hasL = lValidArr[base + iL], hasR = lValidArr[base + iR];
+        const hasD = lValidArr[prevRow + i], hasU = lValidArr[nextRow + i];
+        if (!hasL || !hasR || !hasD || !hasU) {
+          if (edgePtr >= LOPEZ_VERTS) break;
+          lEdgePosArr[edgePtr*3]   = lPosArr[idx*3];
+          lEdgePosArr[edgePtr*3+1] = lPosArr[idx*3+1];
+          lEdgePosArr[edgePtr*3+2] = lPosArr[idx*3+2];
+          lEdgeColArr[edgePtr*3]   = lColArr[idx*3];
+          lEdgeColArr[edgePtr*3+1] = lColArr[idx*3+1];
+          lEdgeColArr[edgePtr*3+2] = lColArr[idx*3+2];
+          edgePtr++;
+        }
+      }
+    }
+    lEdgePosAttr.needsUpdate = true; lEdgeColAttr.needsUpdate = true; lEdgeGeom.setDrawRange(0, edgePtr);
+  }
+
+  // ── Per-surface synthetic animation parameters ──
+  let mobiusWidth = 0.55;
+  let enneperScale = 1.0;
+  let diniB = 0.20;
+  let catalanStretch = 1.6;
+  let whitneySharp = 1.0;
+  let sqrtLift = 0.46;
+  let kleinAmp = 1.0;
+  let boySpike = 1.2;
+  let threeSolitonSpread = 0.02;
+  let fourSolitonSpread = 1.0;
+  let kBreath = 0.5;
+  
+  let bourTwist = 0.0;
+
+  let hennebergAA = 0.0;
+  const HENNEBERG_PERIOD = 24.0;
+
+  let boysRmin = 0.02;
+  const BOYS_RMIN_MIN = 0.02;
+  const BOYS_RMIN_MAX = 0.85;
+  const BOYS_PERIOD = 18.0;
+  let boysStartT = -1;
+  let lastBoysFormula = -1;
+  
+  let kummerStartT = -1;
+  let lastKummerFormula = -1;
+  let lastKummerUpdate = -1;
+  const KUMMER_PERIOD = 20.0;
+  const KUMMER_UPDATE_INTERVAL = 1 / 30;
+  const KUMMER_LAMBDA_MIN = 0.0;
+  const KUMMER_LAMBDA_MAX = 3.0;
+
+  const MOBIUS_PERIOD = 16.0;
+  const ENNEPER_PERIOD = 20.0;
+  const DINI_PERIOD = 18.0;
+  const CATALAN_PERIOD = 22.0;
+  const WHITNEY_PERIOD = 19.0;
+  const SQRT_PERIOD = 17.0;
+  const KLEIN_PERIOD = 21.0;
+  const BOY_PERIOD = 18.0;
+  const THREE_SOLITON_PERIOD = 20.0;
+  const FOUR_SOLITON_PERIOD = 22.0;
+  const BOUR_PERIOD = 18.0;
+
+  let mobiusStartT = -1, enneperStartT = -1, diniStartT = -1, catalanStartT = -1;
+  let whitneyStartT = -1, sqrtStartT = -1, kleinStartT = -1, boyStartT = -1;
+  let threeSolitonStartT = -1, fourSolitonStartT = -1;
+  let hennebergStartT = -1;
+  let bourStartT = -1;
+
+  let lastMobiusFormula = -1, lastEnneperFormula = -1, lastDiniFormula = -1, lastCatalanFormula = -1;
+  let lastWhitneyFormula = -1, lastSqrtFormula = -1, lastKleinFormula = -1, lastBoyFormula = -1;
+  let lastThreeSolitonFormula = -1, lastFourSolitonFormula = -1, lastBarthFormula = -1;
+  let lastHennebergFormula = -1;
+  let lastBourFormula = -1;
+
+  const formulas = {
+    'Mobius': (u, v, k = 0) => {
+      const t = u * Math.PI * 2;
+      const w = (v - 0.5) * (mobiusWidth + 0.2 * k);
+      const flow = Math.sin(t * 0.5) * 0.08 * k;
+      const twist = t / 2 + flow + (0.08 + 0.25 * k) * Math.sin(t);
+      const r = 1.15 + w * Math.cos(twist) + 0.04 * k * Math.sin(t * 2);
+      return new THREE.Vector3(r * Math.cos(t), w * Math.sin(twist) * 0.85 + 0.06 * Math.sin(t * 3) * k, r * Math.sin(t));
+    },
+    'Enneper': (u, v, k = 0) => {
+      const sc = enneperScale;
+      const x = (u - 0.5) * 2.8 * sc;
+      const y = (v - 0.5) * 2.8 * sc;
+      const ripple = (0.04 + 0.22 * k) * Math.sin(x * (1.5 + k * 2)) * Math.cos(y * (1.5 + k * 2));
+      return new THREE.Vector3(x - x*x*x/3 + x*y*y, y - y*y*y/3 + y*x*x, x*x - y*y + ripple).multiplyScalar(0.42);
+    },
+    'Dini': (u, v, k = 0) => {
+      const a = 1, b = diniB + 0.04 * k;
+      const uu = 0.15 + u * (3.2 + k * 0.9);
+      const vv = v * Math.PI * 2;
+      return new THREE.Vector3(a*Math.cos(vv)*Math.sin(uu), a*Math.sin(vv)*Math.sin(uu), a*(Math.cos(uu)+Math.log(Math.tan(uu/2))) + b*vv).multiplyScalar(0.36);
+    },
+    'Kuen': (u, v, k = 0) => {
+      const uu = 0.2 + u * (2.5 + k * 0.6);
+      const vv = (v - 0.5) * Math.PI * (1.4 + 0.3 * k);
+      const s2 = Math.sin(vv) * Math.sin(vv);
+      const r = 2 / (1 + uu * uu * s2);
+      const x = r * (Math.cos(vv) + uu * Math.sin(vv)) * Math.sin(uu);
+      const y = r * (Math.sin(vv) - uu * Math.cos(vv)) * Math.sin(uu);
+      const logTerm = Math.log(Math.max(0.01, Math.tan(uu / 2)));
+      const z = r * (logTerm + uu * Math.cos(vv) / Math.max(0.1, Math.sin(uu)));
+      const wave = (0.06 + 0.12 * k) * Math.sin(uu * 2) * Math.cos(vv);
+      return new THREE.Vector3(x * 0.35, z * 0.2 + wave, y * 0.35);
+    },
+    'Scherk': (u, v, k = 0) => {
+      const x = (u - 0.5) * 2.3; const y = (v - 0.5) * 2.3;
+      const cx = Math.max(0.14, Math.abs(Math.cos(x)));
+      const cy = Math.max(0.14, Math.abs(Math.cos(y)));
+      const z = Math.log(cy / cx);
+      const twist = (0.35 + 1.1 * k) * Math.atan2(y, x) + (0.1 + 0.4 * k) * Math.hypot(x, y);
+      const c = Math.cos(twist), s = Math.sin(twist);
+      return new THREE.Vector3((c*x - s*y)*0.58, z*(0.28 + 0.18*k), (s*x + c*y)*0.58);
+    },
+    'Scherk2': (u, v, k = 0.5) => {
+      const alpha = 0.3 + 1.2 * k;
+      const beta  = 0.1 + 0.8 * k;
+      const uu = (-0.75 + 1.5 * u) * Math.PI;
+      const vv = (-2.0  + 4.0 * v) * Math.PI;
+      const au = alpha * uu;
+      const av = alpha * vv;
+      const cosh_au = Math.cosh(au);
+      const sinh_au = Math.sinh(au);
+      const cos_av  = Math.cos(av);
+      const sin_av  = Math.sin(av);
+      const sqrt_1pb2 = Math.sqrt(1 + beta * beta);
+      const inv_a2 = 1 / (alpha * alpha);
+      const xB = inv_a2 * (alpha * beta * uu + sqrt_1pb2 * sinh_au * cos_av);
+      const yB = inv_a2 * (alpha * sqrt_1pb2 * vv + beta * cosh_au * sin_av);
+      const zB = inv_a2 * sinh_au * sin_av;
+      return new THREE.Vector3(xB, zB, yB);
+    },
+    'Three-Soliton': (u, v, k = 0) => {
+      const spread = threeSolitonSpread;
+      const a = 0.5;
+      const b = 0.5 + 0.45 * spread;
+      const c = 0.5 - 0.45 * spread;
+      const wa = Math.sqrt(1 - a * a), wb = Math.sqrt(1 - b * b), wc = Math.sqrt(1 - c * c);
+      const t = 0.10 + u * 3.4; const p = (v - 0.5) * 2.0 * Math.PI;
+      const sinT = Math.sin(t), cosT = Math.cos(t), sinP = Math.sin(p), cosP = Math.cos(p);
+      const D = 1 + t * t * sinP * sinP;
+      const kx = 2 * (cosP + t * sinP) * sinT / D;
+      const kz = 2 * (sinP - t * cosP) * sinT / D;
+      const ky = Math.log(Math.max(0.01, Math.tan(t / 2))) + 2 * t * cosP / D;
+      const qa = a * t + wa * p, qb = b * t + wb * p, qc = c * t + wc * p;
+      const A = 0.5 * (0.55 + 0.45 * k);
+      const phi = A * Math.sin(qa) + A * Math.sin(qb) + A * Math.sin(qc);
+      const phiXZ = phi * 0.6;
+      const cP = Math.cos(phiXZ), sP = Math.sin(phiXZ);
+      const cx = kx * cP - kz * sP;
+      const cz = kx * sP + kz * cP;
+      const scale = 0.5;
+      const yLift = (0.35 + 0.25 * k) * phi;
+      return new THREE.Vector3(cx * scale, (ky + yLift) * scale * 0.45, cz * scale);
+    },
+    'Four-Soliton': (u, v, k = 0) => {
+      const s = fourSolitonSpread;
+      const alphas = [
+        0.6 - 0.25 * s,
+        0.6 - 0.10 * s,
+        0.6 + 0.05 * s,
+        0.6 + 0.25 * s,
+      ];
+      const omegas = alphas.map(a => Math.sqrt(1 - a * a));
+      const shifts = [0.0, 0.35, -0.45, 0.15];
+      const t = 0.15 + u * 3.3; const p = (v - 0.5) * 2.4 * Math.PI;
+      const th = alphas.map((a, i) => a * t + omegas[i] * p + shifts[i]);
+      const A = (i, j) => { const d = (alphas[i] - alphas[j]) / (alphas[i] + alphas[j]); return d * d; };
+      let tau = 1, tauP = 1;
+      for (let m = 1; m < 16; m++) {
+        let e = 0, c = 1, cnt = 0;
+        const bits = [];
+        for (let i = 0; i < 4; i++) if (m & (1 << i)) { bits.push(i); cnt++; }
+        for (const i of bits) e += th[i];
+        for (let a = 0; a < bits.length; a++) for (let b = a + 1; b < bits.length; b++) c *= A(bits[a], bits[b]);
+        const term = c * Math.exp(e);
+        tau += term; tauP += (cnt & 1 ? -1 : 1) * term;
+      }
+      const qRaw = 4 * Math.atan(tauP / tau);
+      const qS = Math.tanh(qRaw * 0.55) * 2.2;
+      const sq = Math.sin(qS), cq = Math.cos(qS);
+      const D = 1 + t * t * Math.sin(p) * Math.sin(p) * 0.3;
+      const kx = 2 * (Math.cos(p) + 0.5 * t * Math.sin(p)) * Math.sin(t) / D;
+      const kz = 2 * (Math.sin(p) - 0.5 * t * Math.cos(p)) * Math.sin(t) / D;
+      const ky = Math.log(Math.max(0.01, Math.tan(t / 2))) + 2 * t * Math.cos(p) / D;
+      const tw = 1.00 * qS + 0.18 * t + 0.12 * k;
+      const cw = Math.cos(tw), sw = Math.sin(tw);
+      const rx = kx * cw - kz * sw, rz = kx * sw + kz * cw;
+      const swell = 1 + 0.36 * cq + 0.20 * sq + 0.08 * k * Math.sin(2 * p);
+      const yMod = ky * 0.40 + 0.36 * Math.sin(qS + 0.4 * p) + 0.18 * Math.cos(2 * qS - 1.0 * p) + 0.09 * Math.sin(3 * p + 0.4 * qS) + 0.11 * k * Math.sin(2 * p + qS);
+      return new THREE.Vector3(rx * swell, yMod, rz * swell).multiplyScalar(0.55);
+    },
+    'Breather': (u, v, k = 0) => {
+      const aa = 0.35 + 0.40 * k; const w = Math.sqrt(1 - aa * aa);
+      const xi = (u - 0.5) * 9.0; const vv = v * Math.PI * 4.0;
+      const cu = Math.cosh(xi), su = Math.sinh(xi);
+      const sw = Math.sin(w * vv), cw = Math.cos(w * vv);
+      const sv = Math.sin(vv), cv = Math.cos(vv);
+      const den = (w * cu) * (w * cu) + (aa * sw) * (aa * sw);
+      const x = -xi + 2 * (1 - aa * aa) * cu * su / den;
+      const y = 2 * w * cu * (-(w * cv * cw) - sv * sw) / den;
+      const z = 2 * w * cu * (-(w * sv * cw) + cv * sw) / den;
+      return new THREE.Vector3(x, y + 1.35, z + 0.55).multiplyScalar(0.80);
+    },
+    'Catalan': (u, v, k = 0) => {
+      const uu = (u - 0.5) * Math.PI * (2.2 + 0.6 * k);
+      const vv = (v - 0.5) * catalanStretch;
+      const ch = Math.cosh(vv);
+      const x = uu - Math.sin(uu) * ch;
+      const y = 1 - Math.cos(uu) * ch;
+      const z = 4 * Math.sin(uu/2) * Math.sinh(vv/2);
+      const a = 0.12 + 0.55 * k;
+      const curl = a * Math.sin(uu*1.4) * Math.tanh(vv*1.2);
+      const ridge = a * 0.7 * Math.cos(uu*0.8) * Math.sin(vv*1.6);
+      const braid = a * 0.45 * Math.sin(uu*2.1 + vv*1.3);
+      const tw = (0.15 + 0.45 * k) * Math.sin(uu * 0.4);
+      const c = Math.cos(tw), s = Math.sin(tw);
+      const px = x*0.55 + braid, py = z*0.55 + curl, pz = y*0.55 + ridge;
+      return new THREE.Vector3(c*px - s*pz, py, s*px + c*pz).multiplyScalar(0.42);
+    },
+    'Square root': (u, v, k = 0) => {
+      const r = 0.08 + u * 1.45; const theta = v * Math.PI * 2;
+      const rad = Math.sqrt(r);
+      const wave = (0.1 + 0.22 * k) * Math.sin(theta * 2) * u;
+      const lift = sqrtLift * Math.sin(theta) * (0.35 + 0.65 * u);
+      return new THREE.Vector3(rad*Math.cos(theta*0.5), lift + wave, rad*Math.sin(theta*0.5));
+    },
+    'López Klein': (u, v, k = 0.5) => {
+      const A = 5.0, B = 22.0, D = 5.3;
+      const C = 0.15 + 0.7 * k;
+      const U = 3.0 + u * (2 * Math.PI - 3.0);
+      const V = v * 2 * Math.PI;
+      const cosU = Math.cos(U), sinU = Math.sin(U);
+      const cosV = Math.cos(V), sinV = Math.sin(V);
+      const sin2V = Math.sin(2 * V);
+      let denom = 1 + C * cosU * sinV;
+      if (Math.abs(denom) < 0.01) denom = denom >= 0 ? 0.01 : -0.01;
+      const x = (A * cosU * cosV - B * sinU * sin2V) / denom;
+      const y = (A * sinU * cosV + B * cosU * sin2V) / denom;
+      const z = (B * sinV + D * cosU) / denom;
+      return new THREE.Vector3(x, y, z);
+    },
+    'Klein': (u, v, k = 0) => {
+      const uu = u * Math.PI * 2; const vv = v * Math.PI * 2;
+      const a = 0.9 + 0.2 * Math.sin(vv * (1 + k));
+      const cw = kleinAmp * (Math.cos(uu/2)*Math.sin(vv) - Math.sin(uu/2)*Math.sin(2*vv));
+      const x = (a + cw) * Math.cos(uu);
+      const y = (a + cw) * Math.sin(uu);
+      const z = kleinAmp * (Math.sin(uu/2)*Math.sin(vv) + Math.cos(uu/2)*Math.sin(2*vv));
+      return new THREE.Vector3(x, z * 1.2, y).multiplyScalar(0.55);
+    },
+    'Helicoid': (u, v, k = 0) => {
+      const uu = (u - 0.5) * 2.4; const vv = v * Math.PI * (3 + k * 2);
+      return new THREE.Vector3(uu*Math.cos(vv), (0.35 + 0.15*k)*vv - 1.6, uu*Math.sin(vv)).multiplyScalar(0.7);
+    },
+    'Boy': (u, v, k = 0) => {
+      const uu = u * Math.PI; const vv = v * Math.PI;
+      const lobes = 2 + k;
+      const denom = 2.1 - 0.25 * Math.sin(3*uu) * Math.sin(2*vv);
+      const x = (Math.cos(uu)*Math.sin(lobes*vv) + boySpike*Math.sin(uu)*Math.cos(vv)) / denom;
+      const y = (Math.sin(uu)*Math.sin(lobes*vv) - boySpike*Math.cos(uu)*Math.cos(vv));
+      const z = Math.cos(2*uu) * 1.3;
+      const ripple = (0.06 + 0.1*k) * Math.sin(uu*4 + vv*3);
+      const swell = (0.04 + 0.08*k) * Math.cos(uu*2) * Math.sin(vv*2);
+      return new THREE.Vector3(x + ripple, z + swell, y + ripple*0.7).multiplyScalar(0.95);
+    },
+    'Shell': (u, v, k = 0) => {
+      const t = u * Math.PI * (5 + k); const s = (v - 0.5) * Math.PI * 1.2;
+      const grow = Math.exp(0.1 * t);
+      const r = 0.4 * grow * (0.7 + 0.3 * Math.cos(s));
+      const ridge = (0.06 + 0.1 * k) * grow * Math.sin(s * 4);
+      return new THREE.Vector3(r * Math.cos(t) + ridge * Math.cos(t), grow * 0.6 * s + t * 0.05 - 0.5, r * Math.sin(t) + ridge * Math.sin(t)).multiplyScalar(0.6);
+    },
+    'Whitney': (u, v, k = 0) => {
+      const x = (u - 0.5) * (2.4 + 0.5 * k); const y = (v - 0.5) * (2.4 + 0.5 * k);
+      const denom = 0.12 * whitneySharp + Math.abs(y) * 0.8;
+      const z = (x * x) / denom;
+      const ribs = (0.08 + 0.2 * k) * Math.sin(Math.atan2(y, x) * (4 + k*2)) * Math.hypot(x, y);
+      const wave = (0.06 + 0.15 * k) * Math.sin(x*3 + y*2) * Math.cos(y*2);
+      const curl = (0.05 + 0.12 * k) * Math.sin(x*2) * y;
+      return new THREE.Vector3(x + curl, z * 0.35 + ribs + wave, y + wave * 0.5).multiplyScalar(0.75);
+    },
+    'Henneberg': (u, v, k = 0) => {
+      const uu = 1.4 * Math.sin(Math.PI * (u - 0.5));
+      const vv = v * Math.PI * 2;
+
+      const aa = hennebergAA;
+      const ca = 2 * Math.cos(aa * Math.PI) / 1.01;
+      const sa = 2 * Math.sin(aa * Math.PI) / 1.01;
+
+      const sh1 = Math.sinh(uu), ch1 = Math.cosh(uu);
+      const sh3 = Math.sinh(3 * uu), ch3 = Math.cosh(3 * uu);
+      const cv = Math.cos(vv), sv = Math.sin(vv);
+      const cv3 = Math.cos(3 * vv), sv3 = Math.sin(3 * vv);
+      const ch2 = Math.cosh(2 * uu), sh2 = Math.sinh(2 * uu);
+      const cv2 = Math.cos(2 * vv), sv2 = Math.sin(2 * vv);
+
+      const x = ca * (sh1 * cv - sh3 * cv3 / 3) + sa * (ch1 * sv - ch3 * sv3 / 3);
+      const y = ca * (sh1 * sv + sh3 * sv3 / 3) + sa * (-ch1 * cv - ch3 * cv3 / 3);
+      const z = ca * (ch2 * cv2) + sa * (sh2 * sv2);
+
+      return new THREE.Vector3(x, z, y).multiplyScalar(0.45);
+    },
+    'Bour': (u, v, k = 0) => {
+      const uu = 0.01 + u * 2.5; 
+      const vv = v * Math.PI * 2;
+      
+      const x = uu * Math.cos(vv) - (uu * uu / 2) * Math.cos(2 * vv);
+      const y = uu * Math.sin(vv) - (uu * uu / 2) * Math.sin(2 * vv);
+      const z = (2 / 3) * Math.pow(uu, 1.5) * Math.cos(1.5 * vv + bourTwist);
+      
+      return new THREE.Vector3(x, z, y).multiplyScalar(0.8);
+    },
+    'Boys Surface': (u, v, k = 0) => {
+      const rmin = boysRmin, rmax = 1.0;
+      const r = rmin + v * (rmax - rmin);
+      const th = u * Math.PI * 2;
+      const zr = r * Math.cos(th), zi = r * Math.sin(th);
+
+      const z2r = zr*zr - zi*zi, z2i = 2*zr*zi;
+      const z3r = z2r*zr - z2i*zi, z3i = z2r*zi + z2i*zr;
+
+      const invR2 = 1 / (r * r);
+      const zinv_r = zr * invR2, zinv_i = -zi * invR2;
+      const zinv2r = zinv_r*zinv_r - zinv_i*zinv_i, zinv2i = 2*zinv_r*zinv_i;
+      const zinv3r = zinv2r*zinv_r - zinv2i*zinv_i, zinv3i = zinv2r*zinv_i + zinv2i*zinv_r;
+
+      const sq5 = Math.sqrt(5);
+      const dr = z3r - zinv3r + sq5;
+      const di = z3i - zinv3i;
+      const dSq = dr*dr + di*di;
+      if (dSq < 1e-8) return new THREE.Vector3(0, 0, 0);
+
+      const ar = dr / dSq, ai = -di / dSq;
+
+      const v1r0 = z2r - zinv2r, v1i0 = z2i - zinv2i;
+      const V1r = -v1i0, V1i = v1r0;
+      const V2r = z2r + zinv2r, V2i = z2i + zinv2i;
+      const v3r0 = z3r + zinv3r, v3i0 = z3i + zinv3i;
+      const V3r = -2 * v3i0 / 3, V3i = 2 * v3r0 / 3;
+
+      const Mx = ar * V1r - ai * V1i;
+      const My = ar * V2r - ai * V2i;
+      const Mz = (ar * V3r - ai * V3i) + 0.5;
+
+      const Msq = Mx*Mx + My*My + Mz*Mz + 1e-10;
+      return new THREE.Vector3(Mx / Msq, My / Msq, Mz / Msq);
+    },
+  };
+
+  const grids = {
+    'Mobius': [90, 18], 'Enneper': [56, 56], 'Dini': [72, 36], 'Kuen': [72, 48],
+    'Scherk': [64, 64], 'Scherk2': [96, 96], 'Three-Soliton': [96, 96], 'Four-Soliton': [96, 96], 'Breather': [96, 96],
+    'Catalan': [120, 72], 'Square root': [96, 72], 'López Klein': [96, 96], 'Klein': [72, 48], 'Helicoid': [48, 96],
+    'Boy': [64, 48], 'Shell': [96, 36], 'Whitney': [64, 64],
+    'Henneberg': [256, 180],
+    'Bour': [128, 96],
+    'Boys Surface': [200, 128],
+  };
+
+  const dotStrides = { 'Four-Soliton': 3 };
+
+  const scales = {
+    'Mobius': 0.791, 'Dini': 1.293, 'Scherk': 1.583, 'Scherk2': 0.15,
+    'Three-Soliton': 0.735, 'Four-Soliton': 0.735,
+    'Breather': 0.666, 'Barth Sextic': 1.0, 'Cayley Cubic': 0.75, 'Catalan': 3.16, 'Square root': 1.692,
+    'López Klein': 0.03,
+    'Klein': 1.375, 'Helicoid': 1.375, 'Shell': 0.62,
+    'Clebsch Cubic': 0.6,
+    'Boys Surface': 0.70,
+    'Enneper': 0.90,
+    'Whitney': 0.60,
+    'Boy': 0.90,
+    'Henneberg': 0.16,
+    'Bour': 0.4,
+    'Kummer Surface': 0.2,
+    'López–Ros': 0.54,
+  };
+
+  const surfaceYOffset = { 'Breather': -0.55, 'López–Ros': 0.10 };
+
+  const dotScales = {
+    'Mobius': 2.0, 'Shell': 2.0, 'Helicoid': 2.0, 'Klein': 2.0,
+    'Four-Soliton': 1.15, 'Breather': 1.0, 'Barth Sextic': 1.0,
+    'Dini': 1.35,
+    'Henneberg': 1.6,
+    'Bour': 1.0,
+    'Kummer Surface': 1.0,
+  };
+
+  const edgeScales = {
+    'Henneberg': 2.5,
+  };
+
+  const cornerScales = { 'Four-Soliton': 2.2, 'Breather': 0.6, 'Barth Sextic': 1.0 };
+
+  const makers = {};
+  Object.keys(formulas).forEach(name => {
+    const [nu, nv] = grids[name];
+    const stride = dotStrides[name] || 2;
+    makers[name] = () => build(nu, nv, formulas[name], name === 'Mobius' || name === 'Henneberg', stride);
+  });
+
+  const lineMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+  const haloMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending });
+  const BASE_DOT_SIZE = 0.085;
+  const BASE_CORNER_SIZE = 0.11;
+  const dotMat = new THREE.PointsMaterial({ size: BASE_DOT_SIZE, map: softDot, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+
+  const surface = new THREE.Group();
+  scene.add(surface);
+
+  const edgeMat = new THREE.PointsMaterial({ size: 0.30, map: softDot, vertexColors: true, transparent: true, opacity: 0.98, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const rimMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+  const cornerMat = new THREE.PointsMaterial({ size: BASE_CORNER_SIZE, map: softDot, vertexColors: true, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+
+  const topGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xfff0c8, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+  topGlow.position.set(0, 1.55, 0); topGlow.scale.set(0.20, 0.20, 1); topGlow.visible = false; surface.add(topGlow);
+  const topGlowHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xffc070, transparent: true, opacity: 0.40, blending: THREE.AdditiveBlending, depthWrite: false }));
+  topGlowHalo.position.set(0, 1.55, 0); topGlowHalo.scale.set(0.47, 0.47, 1); topGlowHalo.visible = false; surface.add(topGlowHalo);
+
+  let dotScale = 1, cornerScale = 1;
+  let lines = null, halo = null, dots = null, edgePts = null, rim = null, cornerPts = null, sparks = null;
+  let current = null, currentName = '', barthActive = false;
+  let barthW = 0.95;
+  let barthBreathScale = 1.0;
+
+  const coreHaloGold = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xffb870, transparent: true, opacity: 0.10, blending: THREE.AdditiveBlending, depthWrite: false }));
+  coreHaloGold.scale.set(2.6, 2.6, 1);
+  const coreGlowWarm = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xffd190, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
+  coreGlowWarm.scale.set(0.9, 0.9, 1);
+  const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xfff0d8, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+  core.scale.set(0.22, 0.22, 1);
+  scene.add(coreHaloGold, coreGlowWarm, core);
+
+  let interacting = false, glowBoost = 0;
+  let soundOn = false, audioCtx = null, master = null;
+
+  const noiseProfiles = {
+    'Mobius': { freq: 174, q: 1.2, vol: 0.17 }, 'Enneper': { freq: 285, q: 1.0, vol: 0.15 },
+    'Dini': { freq: 396, q: 0.9, vol: 0.14 }, 'Kuen': { freq: 220, q: 0.9, vol: 0.14 },
+    'Scherk': { freq: 417, q: 0.85, vol: 0.13 },
+    'Scherk2': { freq: 720, q: 1.05, vol: 0.14 },
+    'Three-Soliton': { freq: 242, q: 1.25, vol: 0.16 },
+    'Four-Soliton': { freq: 462, q: 0.65, vol: 0.13 }, 'Breather': { freq: 198, q: 2.10, vol: 0.18 },
+    'Barth Sextic': { freq: 962, q: 1.85, vol: 0.11 },
+    'Cayley Cubic': { freq: 622, q: 1.20, vol: 0.12 },
+    'Clebsch Cubic': { freq: 555, q: 1.35, vol: 0.13 },
+    'Catalan': { freq: 528, q: 0.8, vol: 0.12 },
+    'Square root': { freq: 812, q: 0.40, vol: 0.09 },
+    'López Klein': { freq: 355, q: 1.45, vol: 0.14 },
+    'Klein': { freq: 328, q: 1.55, vol: 0.14 },
+    'Helicoid': { freq: 136, q: 1.4, vol: 0.19 }, 'Boy': { freq: 432, q: 0.75, vol: 0.12 },
+    'Shell': { freq: 152, q: 1.60, vol: 0.18 }, 'Whitney': { freq: 480, q: 0.50, vol: 0.12 },
+    'Henneberg': { freq: 312, q: 1.15, vol: 0.14 },
+    'Bour': { freq: 680, q: 0.85, vol: 0.12 },
+    'Kummer Surface': { freq: 840, q: 1.5, vol: 0.15 },
+    'Boys Surface': { freq: 741, q: 1.30, vol: 0.13 },
+    'López–Ros': { freq: 371, q: 1.15, vol: 0.15 },
+  };
+  let currentProfile = noiseProfiles['Mobius'];
+
+  function setTone(name) {
+    currentProfile = noiseProfiles[name] || noiseProfiles['Mobius'];
+    if (window._noiseFilter && audioCtx) {
+      window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq, audioCtx.currentTime, 0.3);
+      window._noiseFilter.Q.setTargetAtTime(currentProfile.q, audioCtx.currentTime, 0.3);
+    }
+  }
+
+  const soundBtn = root.querySelector('#sound');
+  let lastToggle = 0;
+
+  soundBtn.addEventListener('pointerdown', async (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (Date.now() - lastToggle < 300) return;
+    lastToggle = Date.now();
+
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (audioCtx.state === 'suspended') {
+      try { audioCtx.resume(); } catch (err) {}
+    }
+
+    try {
+      if (navigator.audioSession && 'type' in navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (err) {}
+      } else {
+        if (!window._silentAudio) {
+          const a = document.createElement('audio');
+          a.setAttribute('playsinline', ''); a.setAttribute('webkit-playsinline', '');
+          a.loop = true;
+          a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+          a.volume = 0.001;
+          window._silentAudio = a;
+        }
+        window._silentAudio.play().catch(() => {});
+      }
+    } catch (err) {}
+
+    if (audioCtx.state !== 'running') {
+      try { await audioCtx.resume(); } catch (err) {}
+    }
+
+    if (!master) {
+      master = audioCtx.createGain();
+      master.gain.value = 0;
+      const len = audioCtx.sampleRate * 3;
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < len; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.997 * b0 + 0.003 * white; b1 = 0.985 * b1 + 0.015 * white; b2 = 0.95 * b2 + 0.05 * white;
+        data[i] = b0 * 0.6 + b1 * 0.3 + b2 * 0.1;
+      }
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = currentProfile.freq;
+      noiseFilter.Q.value = currentProfile.q;
+      const loudness = audioCtx.createGain(); loudness.gain.value = 1.4;
+      const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.knee.value = 20; comp.ratio.value = 6;
+      comp.attack.value = 0.003; comp.release.value = 0.25;
+      src.connect(noiseFilter).connect(loudness).connect(comp).connect(master);
+      src.start();
+      window._noiseFilter = noiseFilter;
+      master.connect(audioCtx.destination);
+    }
+
+    soundOn = !soundOn;
+    soundBtn.classList.toggle('on', soundOn);
+    try { master.gain.cancelScheduledValues(audioCtx.currentTime); } catch (err) {}
+    master.gain.setValueAtTime(soundOn ? currentProfile.vol : 0, audioCtx.currentTime);
+  });
+
+  controls.addEventListener('start', () => { interacting = true; });
+  controls.addEventListener('end', () => { interacting = false; });
+
+  function makeSparks() {
+    if (sparks) surface.remove(sparks);
+    sparks = new THREE.Group();
+    const n = 12;
+    for (let i = 0; i < n; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xffd8a0, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+      s.scale.set(0.26, 0.26, 1);
+      s.userData = { a: (i / n) * Math.PI * 2, r: 1.3 + (i % 5) * 0.18, sp: 0.3 + (i % 3) * 0.12 };
+      sparks.add(s);
+    }
+    surface.add(sparks);
+  }
+
+  function show(name, preservePhase = false) {
+    [lines, halo, dots, edgePts, rim, cornerPts].forEach(o => o && surface.remove(o));
+    if (sparks) { surface.remove(sparks); sparks = null; }
+    if (barthActive) {
+      surface.remove(barthMesh); surface.remove(barthDotsMesh); surface.remove(barthEdgeMesh);
+    }
+    if (cayleyActive) {
+      surface.remove(cayleyMesh); surface.remove(cayleyDotsMesh); surface.remove(cayleyEdgeMesh);
+    }
+    if (clebschActive) {
+      surface.remove(clebschMesh); surface.remove(clebschDotsMesh); surface.remove(clebschEdgeMesh);
+    }
+    if (lopezActive) {
+      surface.remove(lopezMesh); surface.remove(lopezDotsMesh); surface.remove(lopezEdgeMesh);
+    }
+    if (kummerActive) {
+      surface.remove(kummerMesh); surface.remove(kummerDotsMesh); surface.remove(kummerEdgeMesh);
+    }
+    lines = halo = dots = edgePts = rim = cornerPts = null;
+    current = null;
+    barthActive = false;
+    cayleyActive = false;
+    clebschActive = false;
+    lopezActive = false;
+    kummerActive = false;
+
+    const resetPhase = !preservePhase;
+    if (resetPhase) {
+      if (name === 'Boys Surface') { boysRmin = BOYS_RMIN_MIN; boysStartT = -1; lastBoysFormula = -1; }
+      if (name === 'Mobius')   { mobiusWidth = 0.55;     mobiusStartT = -1;   lastMobiusFormula = -1; }
+      if (name === 'Enneper')  { enneperScale = 1.0;     enneperStartT = -1;  lastEnneperFormula = -1; }
+      if (name === 'Dini')     { diniB = 0.20;           diniStartT = -1;     lastDiniFormula = -1; }
+      if (name === 'Catalan')  { catalanStretch = 1.6;   catalanStartT = -1;  lastCatalanFormula = -1; }
+      if (name === 'Whitney')  { whitneySharp = 1.0;     whitneyStartT = -1;  lastWhitneyFormula = -1; }
+      if (name === 'Square root') { sqrtLift = 0.46;     sqrtStartT = -1;     lastSqrtFormula = -1; }
+      if (name === 'Klein')    { kleinAmp = 1.0;         kleinStartT = -1;    lastKleinFormula = -1; }
+      if (name === 'Boy')      { boySpike = 1.2;         boyStartT = -1;      lastBoyFormula = -1; }
+      if (name === 'Three-Soliton') { threeSolitonSpread = 0.02; threeSolitonStartT = -1; lastThreeSolitonFormula = -1; }
+      if (name === 'Four-Soliton')  { fourSolitonSpread = 1.0;   fourSolitonStartT = -1;  lastFourSolitonFormula = -1; }
+      if (name === 'Barth Sextic')  { lastBarthFormula = -1; }
+      if (name === 'Henneberg')     { hennebergAA = 0.0; hennebergStartT = -1; lastHennebergFormula = -1; }
+      if (name === 'López–Ros')     { lopezE = 1.0; lopezStartT = -1; lastLopezFormula = -1; lastLopezUpdate = -1; }
+      if (name === 'Kummer Surface'){ kummerLambda = 1.0; kummerStartT = -1; lastKummerFormula = -1; lastKummerUpdate = -1; }
+      if (name === 'Bour')          { bourTwist = 0.0; bourStartT = -1; lastBourFormula = -1; }
+    }
+
+    if (name === 'Barth Sextic') {
+      surface.add(barthMesh); surface.add(barthDotsMesh); surface.add(barthEdgeMesh);
+      barthActive = true;
+      barthBreathScale = 1.0;
+      updateBarth(barthW);
+    } else if (name === 'Cayley Cubic') {
+      surface.add(cayleyMesh); surface.add(cayleyDotsMesh); surface.add(cayleyEdgeMesh);
+      cayleyActive = true;
+      cayleyPhase = 0;
+      updateCayley(cayleyC);
+    } else if (name === 'Clebsch Cubic') {
+      surface.add(clebschMesh); surface.add(clebschDotsMesh); surface.add(clebschEdgeMesh);
+      clebschActive = true;
+      updateClebsch();
+    } else if (name === 'Kummer Surface') {
+      surface.add(kummerMesh); surface.add(kummerDotsMesh); surface.add(kummerEdgeMesh);
+      kummerActive = true;
+      updateKummer(kummerLambda);
+    } else if (name === 'López–Ros') {
+      surface.add(lopezMesh); surface.add(lopezDotsMesh); surface.add(lopezEdgeMesh);
+      lopezActive = true;
+      updateLopez(lopezE);
+    } else {
+      const { geo, dotGeo, edgeGeo, rimGeo, cornerGeo } = makers[name]();
+      lines = new THREE.LineSegments(geo, lineMat);
+      halo = new THREE.LineSegments(geo, haloMat);
+      halo.scale.setScalar(1.01);
+      dots = new THREE.Points(dotGeo, dotMat);
+      edgePts = new THREE.Points(edgeGeo, edgeMat);
+      rim = new THREE.Line(rimGeo, rimMat);
+      cornerPts = new THREE.Points(cornerGeo, cornerMat);
+      surface.add(halo, lines, rim, dots, edgePts, cornerPts);
+      dotScale = dotScales[name] || 1;
+      cornerScale = cornerScales[name] || 1;
+      dotMat.size = BASE_DOT_SIZE * dotScale;
+      current = { fn: formulas[name], nu: grids[name][0], nv: grids[name][1] };
+      makeSparks();
+    }
+
+    if (scales[name] !== undefined) {
+      surface.scale.setScalar(scales[name]);
+    } else {
+      const r = measureSurfaceRadius();
+      surface.scale.setScalar(autoFitScaleFromRadius(r));
+    }
+    surface.position.y = surfaceYOffset[name] || 0;
+
+    const isFour = (name === 'Four-Soliton');
+    topGlow.visible = isFour;
+    topGlowHalo.visible = isFour;
+
+    root.querySelector('#surf-name').textContent = name;
+    currentName = name;
+    root.querySelectorAll('#buttons button').forEach(b => b.classList.toggle('active', b.title === name));
+    setTone(name);
+  }
+
+  const info = {
+    'Mobius': { f: 'x(u,v) = (1 + v cos(u/2)) cos u', d: 'A one-sided surface at the heart of topology.' },
+    'Enneper': { f: 'r(u,v) = (u − u³/3 + uv², v − v³/3 + vu², u² − v²)', d: 'A minimal surface — the shape a soap film takes.' },
+    'Dini': { f: 'x = cos v sin u, z = cos u + ln(tan(u/2)) + b·v', d: 'A helicoidal minimal surface of constant negative curvature.' },
+    'Kuen': { f: 'x = 2(cos v + u sin v) sin u / D', d: 'A minimal surface of constant negative curvature, kin to the pseudosphere.' },
+    'Scherk': { f: 'z = ln(cos y / cos x)', d: 'A periodic minimal surface that models crystal interfaces.' },
+    'Scherk2': { f: 'x = α⁻²(αβ·u + √(1+β²)·sinh(αu)·cos(αv))', d: 'A two-parameter Scherk spiral that unfurls and retwists as its coefficients cycle.' },
+    'Three-Soliton': { f: 'q(a,b,c; u,v), K = −1', d: 'A K = −1 surface traced out by a 3-soliton Sine–Gordon solution.' },
+    'Four-Soliton': { f: 'q(z,w; u,v), K = −1', d: 'A K = −1 surface traced out by a 4-soliton Sine–Gordon solution.' },
+    'Breather': { f: 'q(u,v) = 4·arctan( (a/w)·sin(w·v) / cosh(a·u) ), w = √(1−a²), K = −1', d: 'A K = −1 surface from the breather solution of the Sine–Gordon equation.' },
+    'Barth Sextic': { f: '4(φ²x²−y²)(φ²y²−z²)(φ²z²−x²) = (1+2φ)(x²+y²+z²−w²)² w²', d: 'A degree-6 algebraic surface with 65 conical nodes — the most known for any sextic.' },
+    'Cayley Cubic': { f: 'f(x,y,z) = 4(x²+y²+z²) + c·xyz − 1 = 0', d: 'The cubic surface with four conical nodes at the vertices of a regular tetrahedron.' },
+    'Clebsch Cubic': { f: '81(x³+y³+z³) − 189(x²y+x²z+y²x+y²z+z²x+z²y) + 54xyz + 126(xy+xz+yz) − 9(x²+y²+z²) − 9(x+y+z) + 1 = 0', d: 'The smooth diagonal cubic surface on which all twenty-seven exceptional lines are real.' },
+    'Catalan': { f: 'x = u − sin u cosh v, y = 1 − cos u cosh v', d: 'A minimal surface with a cycloidal directrix.' },
+    'Square root': { f: 'w² = z, two-sheeted cover', d: 'The Riemann surface of √z, a two-sheeted cover of the plane.' },
+    'López Klein': { f: 'r = (A cos u cos v − B sin u sin 2v, A sin u cos v + B cos u sin 2v, B sin v + D cos u) / (1 + C cos u sin v)', d: 'A minimal Klein bottle with two antipodal spikes, from López\'s trigonometric immersion.' },
+    'Klein': { f: 'x = (a + cos(u/2)sin v − sin(u/2)sin 2v) cos u', d: 'A closed surface with no inside or outside.' },
+    'Helicoid': { f: 'x = u cos v, y = u sin v, z = cv', d: 'The only ruled minimal surface besides the plane.' },
+    'Boy': { f: 'Bryant-Kusner immersion of RP²', d: 'An immersion of the real projective plane into three-space.' },
+    'Shell': { f: 'r(θ) = ae^(bθ), logarithmic spiral', d: 'A logarithmic spiral surface that models seashells.' },
+    'Whitney': { f: 'x² = y²z', d: 'The classic algebraic surface with a pinch point.' },
+    'Henneberg': { f: 'x = ca(sinh u cos v − ⅓ sinh 3u cos 3v) + sa(cosh u sin v − ⅓ cosh 3u sin 3v)', d: 'A non-orientable minimal surface with two branch points and a self-intersection line.' },
+    'Bour': { f: 'x = u cos v − ½ u² cos 2v, z = ⅔ u^(3/2) cos(3v/2)', d: 'A minimal surface with a helicoid-like sweep and a self-intersecting spine.' },
+    'Kummer Surface': { f: '(x²+y²+z²−a²)² = λ(x²−y²)(y²−z²)(z²−x²)', d: 'A quartic surface with sixteen nodes, linking classical geometry to modern integrable systems.' },
+    'Boys Surface': { f: 'M(z) = Re(V(z)/(z³ − z⁻³ + √5)) + (0,0,½)', d: 'The Bryant-Kusner inversion of a minimal sphere — an immersed real projective plane with one triple point.' },
+    'López–Ros': { f: 'G(z) = c(z² − e²), dh = z² dz/(z² − e²)², c = 1/(2e²)', d: 'A three-ended complete minimal surface with two catenoid ends and one planar end whose periods close, illustrating the López–Ros no-go theorem.' },
+  };
+
+  function setFormula(name) {
+    const base = info[name]?.f || '';
+    let live = null;
+    if (name === 'Mobius') live = `width = ${mobiusWidth.toFixed(2)}`;
+    else if (name === 'Enneper') live = `scale = ${enneperScale.toFixed(2)}`;
+    else if (name === 'Dini') live = `b = ${diniB.toFixed(2)}`;
+    else if (name === 'Catalan') live = `stretch = ${catalanStretch.toFixed(2)}`;
+    else if (name === 'Whitney') live = `sharpness = ${whitneySharp.toFixed(2)}`;
+    else if (name === 'Square root') live = `lift = ${sqrtLift.toFixed(2)}`;
+    else if (name === 'Klein') live = `k = ${kleinAmp.toFixed(2)}`;
+    else if (name === 'Boy') live = `spike = ${boySpike.toFixed(2)}`;
+    else if (name === 'Three-Soliton') {
+      const b = 0.5 + 0.45 * threeSolitonSpread;
+      const c = 0.5 - 0.45 * threeSolitonSpread;
+      live = `a = 0.50, b = ${b.toFixed(2)}, c = ${c.toFixed(2)}`;
+    }
+    else if (name === 'Four-Soliton') {
+      const s = fourSolitonSpread;
+      const a1 = 0.6 - 0.25 * s, a2 = 0.6 - 0.10 * s, a3 = 0.6 + 0.05 * s, a4 = 0.6 + 0.25 * s;
+      live = `α = (${a1.toFixed(2)}, ${a2.toFixed(2)}, ${a3.toFixed(2)}, ${a4.toFixed(2)})`;
+    }
+    else if (name === 'Henneberg') live = `aa = ${hennebergAA.toFixed(2)}`;
+    else if (name === 'Boys Surface') live = `|z| ≥ ${boysRmin.toFixed(2)}`;
+    else if (name === 'Scherk2') {
+      const a = 0.3 + 1.2 * kBreath;
+      const b = 0.1 + 0.8 * kBreath;
+      live = `α = ${a.toFixed(2)}, β = ${b.toFixed(2)}`;
+    }
+    else if (name === 'López Klein') live = `A = 5, B = 22, C = ${(0.15 + 0.7 * kBreath).toFixed(2)}, D = 5.3`;
+    else if (name === 'Cayley Cubic') live = `c = ${cayleyC.toFixed(2)}`;
+    else if (name === 'Kummer Surface') live = `λ = ${kummerLambda.toFixed(2)}`;
+    else if (name === 'Barth Sextic') live = `w = ${barthW.toFixed(2)}`;
+    else if (name === 'Bour') live = `twist = ${bourTwist.toFixed(2)}`;
+    else if (name === 'López–Ros') live = `e = ${lopezE.toFixed(2)}, c = ${(1 / (2 * lopezE * lopezE)).toFixed(2)}`;
+    const el = root.querySelector('#formula');
+    if (live) el.innerHTML = base + '<br>' + live;
+    else el.textContent = base;
+  }
+
+  const palBar = root.querySelector('#palettes');
+  const palColors = { Sunset: '#b87333', Ocean: '#4d6ba0', Mono: '#9999aa', Emerald: '#1b7342' };
+  const palButtons = {};
+  Object.keys(palettes).forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.background = palColors[name];
+    b.title = name;
+    b.setAttribute('aria-label', 'Palette ' + name);
+    b.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      palette = palettes[name];
+      Object.values(palButtons).forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      rebuildBarthColors();
+      rebuildCayleyColors();
+      rebuildClebschColors();
+      rebuildLopezColors();
+      rebuildKummerColors();
+      const nm = root.querySelector('#surf-name').textContent || currentName;
+      if (nm === 'Barth Sextic') {
+        updateBarth(barthW);
+      } else if (nm === 'Cayley Cubic') {
+        updateCayley(cayleyC);
+      } else if (nm === 'Clebsch Cubic') {
+        updateClebsch();
+      } else if (nm === 'Kummer Surface') {
+        updateKummer(kummerLambda);
+      } else {
+        show(nm, true);
+      }
+    });
+    if (name === 'Ocean') b.classList.add('active');
+    palBar.appendChild(b);
+    palButtons[name] = b;
+  });
+
+  function iconFor(fn) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 144;
+    const g = c.getContext('2d');
+    const pts = [];
+    const nu = 22, nv = 14;
+    for (let j = 0; j <= nv; j++) {
+      for (let i = 0; i <= nu; i++) {
+        const p = fn(i / nu, j / nv);
+        const yaw = 0.6, pitch = 0.35;
+        const cy = Math.cos(yaw), sy = Math.sin(yaw);
+        const xr = cy * p.x + sy * p.z;
+        const zr = -sy * p.x + cy * p.z;
+        const cp = Math.cos(pitch), sp = Math.sin(pitch);
+        const yr = cp * p.y - sp * zr;
+        pts.push([xr, yr]);
+      }
+    }
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    pts.forEach(([x, y]) => {
+      if (!isFinite(x) || !isFinite(y)) return;
+      if (Math.abs(x) > 20 || Math.abs(y) > 20) return;
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    });
+    if (maxX === -1e9) { minX = -1; maxX = 1; minY = -1; maxY = 1; }
+    const s = 100 / Math.max(maxX - minX, maxY - minY);
+    const ox = 72 - (minX + maxX) * 0.5 * s;
+    const oy = 72 + (minY + maxY) * 0.5 * s;
+    g.strokeStyle = 'rgba(255,255,255,0.85)';
+    g.lineWidth = 1.2;
+    const at = (i, j) => { const [x, y] = pts[j * (nu + 1) + i]; return [ox + x * s, oy - y * s]; };
+    g.beginPath();
+    for (let j = 0; j <= nv; j += 2) for (let i = 0; i <= nu; i++) { const [x, y] = at(i, j); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); }
+    for (let i = 0; i <= nu; i += 2) for (let j = 0; j <= nv; j++) { const [x, y] = at(i, j); if (j === 0) g.moveTo(x, y); else g.lineTo(x, y); }
+    g.stroke();
+    return c;
+  }
+
+  const bar = root.querySelector('#buttons');
+  const names = [
+    'Mobius',
+    'Cayley Cubic',
+    'Kummer Surface',
+    'Three-Soliton',
+    'Four-Soliton',
+    'Breather',
+    'Enneper',
+    'Clebsch Cubic',
+    'Kuen',
+    'Scherk',
+    'Scherk2',
+    'Dini',
+    'Catalan',
+    'Whitney',
+    'Barth Sextic',
+    'Square root',
+    'López Klein',
+    'Klein',
+    'Helicoid',
+    'Boy',
+    'Shell',
+    'Boys Surface',
+    'López–Ros',
+    'Henneberg',
+    'Bour',
+  ];
+
+  const barthIconFn = (u, v) => {
+    const theta = v * Math.PI;
+    const psi = u * Math.PI * 2;
+    const sT = Math.sin(theta), cT = Math.cos(theta);
+    const sP = Math.sin(psi), cP = Math.cos(psi);
+    const X = sT * cP, Y = cT, Z = sT * sP;
+    const A = (PHI2*X*X - Y*Y) * (PHI2*Y*Y - Z*Z) * (PHI2*Z*Z - X*X);
+    const r = largestPositiveRoot(A, 1.0) || 0.3;
+    return new THREE.Vector3(X * r, Y * r, Z * r);
+  };
+
+  const cayleyIconFn = (u, v) => {
+    const theta = v * Math.PI;
+    const phi = u * Math.PI * 2;
+    const sT = Math.sin(theta), cT = Math.cos(theta);
+    const sP = Math.sin(phi), cP = Math.cos(phi);
+    const X = sT * cP, Y = cT, Z = sT * sP;
+    const A = X * Y * Z;
+    const r = cayleyLargestRoot(A, 16) || 0.5;
+    return new THREE.Vector3(X * r, Y * r, Z * r);
+  };
+
+  const kummerIconFn = (u, v) => {
+    const theta = v * Math.PI;
+    const phi = u * Math.PI * 2;
+    const sT = Math.sin(theta), cT = Math.cos(theta);
+    const sP = Math.sin(phi), cP = Math.cos(phi);
+    const X = sT * cP, Y = cT, Z = sT * sP;
+    const A = (X*X - Y*Y) * (Y*Y - Z*Z) * (Z*Z - X*X);
+    const r = kummerLargestRoot(A, 1.0) || 1.0;
+    return new THREE.Vector3(X * r, Y * r, Z * r);
+  };
+
+  const clebschIconFn = (u, v) => {
+    const theta = v * Math.PI;
+    const phi = u * Math.PI * 2;
+    const sT = Math.sin(theta), cT = Math.cos(theta);
+    const sP = Math.sin(phi), cP = Math.cos(phi);
+    const X = sT * cP, Y = cT, Z = sT * sP;
+    const X2 = X * X, Y2 = Y * Y, Z2 = Z * Z;
+    const a = 81 * (X2 * X + Y2 * Y + Z2 * Z)
+            - 189 * (X2 * Y + X2 * Z + Y2 * X + Y2 * Z + Z2 * X + Z2 * Y)
+            + 54 * X * Y * Z;
+    const b = 126 * (X * Y + X * Z + Y * Z) - 9 * (X2 + Y2 + Z2);
+    const c = -9 * (X + Y + Z);
+    const r = clebschLargestRoot(a, b, c) || 0.4;
+    return new THREE.Vector3(X * r, Y * r, Z * r);
+  };
+
+  const lopezIconFn = (u, v) => {
+    const th = v * Math.PI;
+    const s = (v >= 1) ? 1e9 : Math.tan(th * 0.5);
+    const ph = u * Math.PI * 2;
+    const zr = s * Math.cos(ph), zi = s * Math.sin(ph);
+    if (!isFinite(zr) || !isFinite(zi)) return new THREE.Vector3(0, 0, 0);
+    if (zr*zr + zi*zi > 4.0) return new THREE.Vector3(0, 0, 0);
+    const p = lopezPoint(zr, zi, 1.0);
+    if (!p) return new THREE.Vector3(0, 0, 0);
+    return new THREE.Vector3(p[0], p[1], p[2]);
+  };
+
+  let index = 0;
+  names.forEach((name, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.title = name;
+    let iconFn;
+    if (name === 'Barth Sextic') iconFn = barthIconFn;
+    else if (name === 'Cayley Cubic') iconFn = cayleyIconFn;
+    else if (name === 'Clebsch Cubic') iconFn = clebschIconFn;
+    else if (name === 'Kummer Surface') iconFn = kummerIconFn;
+    else if (name === 'López–Ros') iconFn = lopezIconFn;
+    else iconFn = formulas[name];
+    b.appendChild(iconFor(iconFn));
+    const label = document.createElement('span');
+    label.textContent = name;
+    b.appendChild(label);
+    b.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      index = i;
+      show(name);
+      setFormula(name);
+      root.querySelector('#desc').textContent = info[name]?.d || '';
+    });
+    bar.appendChild(b);
+  });
+  root.querySelector('#count').textContent = names.length + ' surfaces · swipe';
+  show(names[0]);
+  setFormula(names[0]);
+  root.querySelector('#desc').textContent = info[names[0]]?.d || '';
+  root.querySelectorAll('#buttons button')[0].classList.add('active');
+
+  function scrollBarToActive() {
+    const btn = bar.children[index];
+    if (!btn) return;
+    const target = btn.offsetLeft - bar.clientWidth / 2 + btn.clientWidth / 2;
+    bar.scrollTo({ left: target, behavior: 'smooth' });
+  }
+
+  function step(dir) {
+    index = (index + dir + names.length) % names.length;
+    show(names[index]);
+    setFormula(names[index]);
+    root.querySelector('#desc').textContent = info[names[index]]?.d || '';
+    scrollBarToActive();
+  }
+  root.querySelector('#prev').addEventListener('click', () => step(-1));
+  root.querySelector('#next').addEventListener('click', () => step(1));
+
+  resize();
+  requestAnimationFrame(resize);
+  window.addEventListener('resize', resize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resize);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(root);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 250));
+
+  const clock = new THREE.Clock();
+  let lastBarthUpdate = -1;
+  let lastCayleyUpdate = -1;
+  let lastCayleyFormula = -1;
+  let lastScherk2Formula = -1;
+  let lastLopezFormulaInternal = -1;
+  const BARTH_UPDATE_INTERVAL = 1 / 30;
+  const CAYLEY_UPDATE_INTERVAL = 1 / 30;
+  const CAYLEY_PERIOD = 20.0;
+
+  (function loop() {
+    const t = clock.getElapsedTime();
+    const breathPhase = t * 0.25 + 0.48 * Math.sin(t * 0.23) + 0.22 * Math.sin(t * 0.67 + 1.4) + 0.10 * Math.sin(t * 1.31 + 2.6);
+    const k = 0.5 + 0.5 * Math.sin(breathPhase);
+    kBreath = k;
+    const breath = 0.65 + 0.35 * Math.sin(t * 1.3);
+    const target = interacting ? 1 : 0;
+    glowBoost += (target - glowBoost) * 0.08;
+    const glow = breath * (0.7 + 0.6 * glowBoost);
+
+    if (currentName === 'Mobius') {
+      if (mobiusStartT < 0) mobiusStartT = t;
+      const phase = ((t - mobiusStartT) % MOBIUS_PERIOD) / MOBIUS_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      mobiusWidth = 0.35 + 0.50 * sp;
+      if (Math.abs(t - lastMobiusFormula) > 0.12) {
+        lastMobiusFormula = t;
+        setFormula('Mobius');
+      }
+    }
+    if (currentName === 'Enneper') {
+      if (enneperStartT < 0) enneperStartT = t;
+      const phase = ((t - enneperStartT) % ENNEPER_PERIOD) / ENNEPER_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      enneperScale = 0.85 + 0.25 * sp;
+      if (Math.abs(t - lastEnneperFormula) > 0.12) {
+        lastEnneperFormula = t;
+        setFormula('Enneper');
+      }
+    }
+    if (currentName === 'Dini') {
+      if (diniStartT < 0) diniStartT = t;
+      const phase = ((t - diniStartT) % DINI_PERIOD) / DINI_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      diniB = 0.10 + 0.32 * sp;
+      if (Math.abs(t - lastDiniFormula) > 0.12) {
+        lastDiniFormula = t;
+        setFormula('Dini');
+      }
+    }
+    if (currentName === 'Catalan') {
+      if (catalanStartT < 0) catalanStartT = t;
+      const phase = ((t - catalanStartT) % CATALAN_PERIOD) / CATALAN_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      catalanStretch = 0.90 + 1.10 * sp;
+      if (Math.abs(t - lastCatalanFormula) > 0.12) {
+        lastCatalanFormula = t;
+        setFormula('Catalan');
+      }
+    }
+    if (currentName === 'Whitney') {
+      if (whitneyStartT < 0) whitneyStartT = t;
+      const phase = ((t - whitneyStartT) % WHITNEY_PERIOD) / WHITNEY_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      whitneySharp = 0.70 + 0.70 * sp;
+      if (Math.abs(t - lastWhitneyFormula) > 0.12) {
+        lastWhitneyFormula = t;
+        setFormula('Whitney');
+      }
+    }
+    if (currentName === 'Square root') {
+      if (sqrtStartT < 0) sqrtStartT = t;
+      const phase = ((t - sqrtStartT) % SQRT_PERIOD) / SQRT_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      sqrtLift = 0.15 + 0.55 * sp;
+      if (Math.abs(t - lastSqrtFormula) > 0.12) {
+        lastSqrtFormula = t;
+        setFormula('Square root');
+      }
+    }
+    if (currentName === 'Klein') {
+      if (kleinStartT < 0) kleinStartT = t;
+      const phase = ((t - kleinStartT) % KLEIN_PERIOD) / KLEIN_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      kleinAmp = 0.65 + 0.50 * sp;
+      if (Math.abs(t - lastKleinFormula) > 0.12) {
+        lastKleinFormula = t;
+        setFormula('Klein');
+      }
+    }
+    if (currentName === 'Boy') {
+      if (boyStartT < 0) boyStartT = t;
+      const phase = ((t - boyStartT) % BOY_PERIOD) / BOY_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      boySpike = 0.80 + 0.80 * sp;
+      if (Math.abs(t - lastBoyFormula) > 0.12) {
+        lastBoyFormula = t;
+        setFormula('Boy');
+      }
+    }
+    if (currentName === 'Three-Soliton') {
+      if (threeSolitonStartT < 0) threeSolitonStartT = t;
+      const phase = ((t - threeSolitonStartT) % THREE_SOLITON_PERIOD) / THREE_SOLITON_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      threeSolitonSpread = 0.02 + 0.83 * sp;
+      if (Math.abs(t - lastThreeSolitonFormula) > 0.12) {
+        lastThreeSolitonFormula = t;
+        setFormula('Three-Soliton');
+      }
+    }
+    if (currentName === 'Four-Soliton') {
+      if (fourSolitonStartT < 0) fourSolitonStartT = t;
+      const phase = ((t - fourSolitonStartT) % FOUR_SOLITON_PERIOD) / FOUR_SOLITON_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      fourSolitonSpread = 0.65 + 0.55 * sp;
+      if (Math.abs(t - lastFourSolitonFormula) > 0.12) {
+        lastFourSolitonFormula = t;
+        setFormula('Four-Soliton');
+      }
+    }
+    if (currentName === 'Boys Surface') {
+      if (boysStartT < 0) boysStartT = t;
+      const phase = ((t - boysStartT) % BOYS_PERIOD) / BOYS_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      boysRmin = BOYS_RMIN_MIN + (BOYS_RMIN_MAX - BOYS_RMIN_MIN) * sp;
+      if (Math.abs(t - lastBoysFormula) > 0.12) {
+        lastBoysFormula = t;
+        setFormula('Boys Surface');
+      }
+    }
+    if (currentName === 'Henneberg') {
+      if (hennebergStartT < 0) hennebergStartT = t;
+      const phase = ((t - hennebergStartT) % HENNEBERG_PERIOD) / HENNEBERG_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      hennebergAA = sp;
+      if (Math.abs(t - lastHennebergFormula) > 0.12) {
+        lastHennebergFormula = t;
+        setFormula('Henneberg');
+      }
+    }
+    if (currentName === 'Bour') {
+      if (bourStartT < 0) bourStartT = t;
+      const phase = ((t - bourStartT) % BOUR_PERIOD) / BOUR_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      bourTwist = sp * Math.PI;
+      if (Math.abs(t - lastBourFormula) > 0.12) {
+        lastBourFormula = t;
+        setFormula('Bour');
+      }
+    }
+    if (currentName === 'López–Ros') {
+      if (lopezStartT < 0) lopezStartT = t;
+      const phase = ((t - lopezStartT) % LOPEZ_PERIOD) / LOPEZ_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      
+      lopezE = 0.65 + 0.20 * sp;
+      
+      if (Math.abs(t - lastLopezFormula) > 0.12) {
+        lastLopezFormula = t;
+        setFormula('López–Ros');
+      }
+    }
+    if (currentName === 'Kummer Surface') {
+      if (kummerStartT < 0) kummerStartT = t;
+      const phase = ((t - kummerStartT) % KUMMER_PERIOD) / KUMMER_PERIOD;
+      const sp = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      kummerLambda = KUMMER_LAMBDA_MIN + (KUMMER_LAMBDA_MAX - KUMMER_LAMBDA_MIN) * sp;
+      if (Math.abs(t - lastKummerFormula) > 0.12) {
+        lastKummerFormula = t;
+        setFormula('Kummer Surface');
+      }
+    }
+
+    if (master && audioCtx && soundOn) {
+      const base = currentProfile.vol;
+      master.gain.setTargetAtTime(base + base * 0.6 * glowBoost, audioCtx.currentTime, 0.15);
+      if (window._noiseFilter && !barthActive && !cayleyActive && !clebschActive && !kummerActive) {
+        if (currentName === 'Scherk2') {
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.65 + 0.7 * k), audioCtx.currentTime, 0.3);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.8 + 0.7 * k), audioCtx.currentTime, 0.3);
+        } else if (currentName === 'López Klein') {
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.75 + 0.55 * k), audioCtx.currentTime, 0.3);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.8 + 0.55 * k), audioCtx.currentTime, 0.3);
+        } else if (currentName === 'Boys Surface') {
+          const n = (boysRmin - BOYS_RMIN_MIN) / (BOYS_RMIN_MAX - BOYS_RMIN_MIN);
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (1.0 + 0.30 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (1.0 + 0.50 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Mobius') {
+          const n = (mobiusWidth - 0.35) / 0.50;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.75 + 0.55 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Enneper') {
+          const n = (enneperScale - 0.85) / 0.25;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.70 + 0.60 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Dini') {
+          const n = (diniB - 0.10) / 0.32;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.80 + 0.50 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Catalan') {
+          const n = (catalanStretch - 0.90) / 1.10;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.65 + 0.70 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Whitney') {
+          const n = (whitneySharp - 0.70) / 0.70;
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.80 + 0.60 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Square root') {
+          const n = (sqrtLift - 0.15) / 0.55;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.85 + 0.40 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Klein') {
+          const n = (kleinAmp - 0.65) / 0.50;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.70 + 0.60 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Boy') {
+          const n = (boySpike - 0.80) / 0.80;
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.80 + 0.70 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Three-Soliton') {
+          const n = (threeSolitonSpread - 0.02) / 0.83;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.85 + 0.40 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.85 + 0.35 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Four-Soliton') {
+          const n = (fourSolitonSpread - 0.65) / 0.55;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.75 + 0.50 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.80 + 0.60 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Henneberg') {
+          const n = Math.sin(hennebergAA * Math.PI);
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.85 + 0.35 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.90 + 0.40 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'Bour') {
+          const n = bourTwist / Math.PI;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.8 + 0.5 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.8 + 0.4 * n), audioCtx.currentTime, 0.25);
+        } else if (currentName === 'López–Ros') {
+          const n = (lopezE - 0.72) / 0.56;
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.80 + 0.50 * n), audioCtx.currentTime, 0.25);
+          window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.85 + 0.40 * n), audioCtx.currentTime, 0.25);
+        } else {
+          window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (1 + 0.3 * glowBoost), audioCtx.currentTime, 0.2);
+        }
+      } else if (window._noiseFilter && barthActive) {
+        window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.9 + 0.3 * (barthW - 0.95)), audioCtx.currentTime, 0.3);
+      } else if (window._noiseFilter && cayleyActive) {
+        const ct = cayleyC / 16;
+        window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.55 + 0.85 * ct), audioCtx.currentTime, 0.25);
+        window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.7 + 0.9 * ct), audioCtx.currentTime, 0.25);
+      } else if (window._noiseFilter && clebschActive) {
+        window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (1 + 0.10 * glowBoost), audioCtx.currentTime, 0.25);
+      } else if (window._noiseFilter && kummerActive) {
+        const n = kummerLambda / KUMMER_LAMBDA_MAX;
+        window._noiseFilter.frequency.setTargetAtTime(currentProfile.freq * (0.8 + 0.6 * n), audioCtx.currentTime, 0.25);
+        window._noiseFilter.Q.setTargetAtTime(currentProfile.q * (0.8 + 0.7 * n), audioCtx.currentTime, 0.25);
+      }
+    } else if (master && audioCtx && !soundOn) {
+      master.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
+    }
+
+    coreHaloGold.material.opacity = 0.09 + 0.04 * glow;
+    coreHaloGold.scale.setScalar(2.5 + 0.4 * glow);
+    coreGlowWarm.material.opacity = 0.20 + 0.06 * glow;
+    coreGlowWarm.scale.setScalar(0.88 + 0.14 * glow);
+    core.material.opacity = 0.50 + 0.10 * breath;
+    core.scale.setScalar(0.21 + 0.03 * breath);
+
+    stars.material.opacity = (0.95 + 0.05 * glowBoost) * 0.8;
+    dust.material.opacity = (0.65 + 0.15 * glowBoost) * 0.8;
+
+    if (topGlow.visible) {
+      const p = 0.5 + 0.5 * Math.sin(t * 2.4);
+      topGlow.material.opacity = 0.80 + 0.20 * p;
+      topGlow.scale.setScalar(0.187 + 0.053 * p);
+      topGlowHalo.material.opacity = 0.30 + 0.20 * p;
+      topGlowHalo.scale.setScalar(0.433 + 0.100 * p);
+    }
+
+    const activeBtn = root.querySelector('#buttons button.active');
+    if (activeBtn) {
+      const pulse = 0.35 + 0.25 * Math.sin(t * 2.2);
+      activeBtn.style.boxShadow = `0 0 16px rgba(255,255,255,${0.10 + 0.08 * pulse}), 0 3px 12px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(255,255,255,0.10)`;
+    }
+
+    surface.rotation.y = t * 0.18;
+    surface.rotation.x = Math.sin(t * 0.12) * 0.18;
+
+    if (sparks) {
+      sparks.children.forEach((s, i) => {
+        const a = s.userData.a + t * s.userData.sp;
+        const r = s.userData.r + 0.08 * Math.sin(t * 0.7 + i);
+        s.position.set(Math.cos(a) * r, Math.sin(t * 0.5 + i) * 0.35, Math.sin(a) * r);
+        s.material.opacity = 0.32 + 0.32 * (0.5 + 0.5 * Math.sin(t * 1.5 + i));
+      });
+    }
+
+    if (lines && !barthActive && !kummerActive) {
+      const pulse = 0.85 + 0.15 * Math.sin(t * 1.8);
+      lines.material.opacity = pulse;
+      if (halo) halo.material.opacity = 0.1 + 0.1 * pulse;
+    }
+    if (dots && !barthActive && !kummerActive) {
+      const pulse = 0.85 + 0.15 * Math.sin(t * 1.4 + 0.7);
+      dots.material.opacity = 0.85 + 0.15 * pulse;
+    }
+
+    if (!barthActive && !cayleyActive && !clebschActive && !lopezActive && !kummerActive) {
+      const swell = 1 + 0.022 * Math.sin(t * 0.53 + Math.sin(t * 0.19) * 0.6);
+      const baseScale = scales[currentName] || 1;
+      surface.scale.setScalar(baseScale * swell);
+
+      if (currentName === 'Scherk2' && Math.abs(t - lastScherk2Formula) > 0.12) {
+        lastScherk2Formula = t;
+        setFormula('Scherk2');
+      }
+
+      if (currentName === 'López Klein' && Math.abs(t - lastLopezFormulaInternal) > 0.12) {
+        lastLopezFormulaInternal = t;
+        setFormula('López Klein');
+      }
+
+      if (current && lines && dots) {
+        const { fn, nu, nv } = current;
+        const pos = lines.geometry.attributes.position;
+        const dpos = dots.geometry.attributes.position;
+        let i = 0, di = 0;
+        for (let j = 0; j <= nv; j++) {
+          for (let ii = 0; ii <= nu; ii++) {
+            const u = ii / nu, v = j / nv;
+            const p = fn(u, v, k);
+            pos.setXYZ(i, p.x, p.y, p.z);
+            if (ii % 2 === 0 && j % 2 === 0 && di < dpos.count) { dpos.setXYZ(di, p.x, p.y, p.z); di++; }
+            i++;
+          }
+        }
+        pos.needsUpdate = true;
+        dpos.needsUpdate = true;
+        if (edgePts) {
+          const epos = edgePts.geometry.attributes.position;
+          let ei = 0;
+          for (let ii = 0; ii <= nu && ei < epos.count; ii += 3) { const p = fn(ii / nu, 1, k); epos.setXYZ(ei, p.x, p.y, p.z); ei++; }
+          for (let jj = 0; jj <= nv && ei < epos.count; jj += 3) { const p = fn(1, jj / nv, k); epos.setXYZ(ei, p.x, p.y, p.z); ei++; }
+          epos.needsUpdate = true;
+          edgePts.material.size = (0.28 + 0.10 * glow) * (edgeScales[currentName] || 1);
+          edgePts.material.opacity = 0.85 + 0.15 * glow;
+        }
+        if (rim) {
+          const rpos = rim.geometry.attributes.position;
+          let ri = 0;
+          const setR = (uu, vv) => { const p = fn(uu, vv, k); rpos.setXYZ(ri, p.x, p.y, p.z); ri++; };
+          for (let ii = 0; ii <= nu; ii++) setR(ii / nu, 0);
+          for (let jj = 1; jj <= nv; jj++) setR(1, jj / nv);
+          for (let ii = nu - 1; ii >= 0; ii--) setR(ii / nu, 1);
+          for (let jj = nv - 1; jj >= 1; jj--) setR(0, jj / nv);
+          rpos.needsUpdate = true;
+        }
+        if (cornerPts) {
+          const cpos = cornerPts.geometry.attributes.position;
+          const corners = [[0,0],[1,0],[1,1],[0,1]];
+          corners.forEach(([uu, vv], ci) => { const p = fn(uu, vv, k); cpos.setXYZ(ci, p.x, p.y, p.z); });
+          cpos.needsUpdate = true;
+          cornerPts.material.size = (0.093 + 0.033 * glow) * cornerScale;
+          cornerPts.material.opacity = 0.92 + 0.08 * glow;
+        }
+      }
+    } else if (barthActive) {
+      const PERIOD_W = 24.0;
+      const PERIOD_BREATH = 20.0;
+
+      barthW = 0.95 + 0.17 * Math.sin(t * (2 * Math.PI / PERIOD_W));
+
+      const rawBreath = 0.5 - 0.5 * Math.cos(t * (2 * Math.PI / PERIOD_BREATH));
+      const easedBreath = rawBreath * rawBreath * (3 - 2 * rawBreath);
+      barthBreathScale = 0.28 + 0.72 * easedBreath;
+
+      if (t - lastBarthUpdate > BARTH_UPDATE_INTERVAL) {
+        lastBarthUpdate = t;
+        updateBarth(barthW);
+      }
+
+      if (Math.abs(t - lastBarthFormula) > 0.12) {
+        lastBarthFormula = t;
+        setFormula('Barth Sextic');
+      }
+
+      const inner = 1 + 0.010 * Math.sin(t * 1.1);
+      surface.scale.setScalar((scales['Barth Sextic'] || 1.0) * barthBreathScale * inner);
+
+      const brightPulse = 0.78 + 0.22 * Math.sin(t * 1.6);
+      bLineMat.opacity = Math.max(0.5, Math.min(1.0, brightPulse + 0.08 * (barthW - 0.95)));
+
+      const dotPulse = 0.85 + 0.15 * Math.sin(t * 1.9 + 0.7);
+      bDotMat.opacity = 0.75 + 0.25 * dotPulse;
+      bDotMat.size = BASE_BARTH_DOT * (1 + 0.15 * (0.5 + 0.5 * Math.sin(t * 1.4)));
+
+      const edgePulse = 0.85 + 0.20 * Math.sin(t * 1.5 + 1.2);
+      bEdgeMat.opacity = 0.80 + 0.20 * edgePulse;
+      bEdgeMat.size = BASE_BARTH_EDGE * (1 + 0.20 * (0.5 + 0.5 * Math.sin(t * 1.2 + 0.4)));
+    } else if (cayleyActive) {
+      const phase = (t % CAYLEY_PERIOD) / CAYLEY_PERIOD;
+      const smoothPhase = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2);
+      const cVal = 16 * smoothPhase;
+      cayleyPhase = smoothPhase;
+
+      if (t - lastCayleyUpdate > CAYLEY_UPDATE_INTERVAL) {
+        lastCayleyUpdate = t;
+        updateCayley(cVal);
+      }
+
+      const inner = 1 + 0.018 * Math.sin(t * 0.9) + 0.010 * Math.sin(t * 1.7);
+      surface.scale.setScalar((scales['Cayley Cubic'] || 1.35) * inner);
+
+      const intens = 0.55 + 0.55 * smoothPhase;
+      const brightPulse = 0.78 + 0.22 * Math.sin(t * 1.7);
+      cLineMat.opacity = Math.max(0.42, Math.min(1.0, brightPulse * intens));
+
+      const dotPulse = 0.85 + 0.15 * Math.sin(t * 1.9 + 0.6);
+      cDotMat.opacity = (0.70 + 0.30 * dotPulse) * (0.55 + 0.55 * smoothPhase);
+      cDotMat.size = BASE_CAYLEY_DOT * (1 + 0.18 * (0.5 + 0.5 * Math.sin(t * 1.5)));
+
+      const edgePulse = 0.85 + 0.18 * Math.sin(t * 1.4 + 1.1);
+      cEdgeMat.opacity = (0.78 + 0.22 * edgePulse) * (0.6 + 0.5 * smoothPhase);
+      cEdgeMat.size = BASE_CAYLEY_EDGE * (1 + 0.20 * (0.5 + 0.5 * Math.sin(t * 1.3 + 0.5)));
+
+      if (Math.abs(t - lastCayleyFormula) > 0.12) {
+        lastCayleyFormula = t;
+        setFormula('Cayley Cubic');
+      }
+    } else if (kummerActive) {
+      if (t - lastKummerUpdate > KUMMER_UPDATE_INTERVAL) {
+        lastKummerUpdate = t;
+        updateKummer(kummerLambda);
+      }
+
+      const inner = 1 + 0.015 * Math.sin(t * 1.1);
+      surface.scale.setScalar((scales['Kummer Surface'] || 1.4) * inner);
+
+      const brightPulse = 0.80 + 0.20 * Math.sin(t * 1.6);
+      kLineMat.opacity = Math.max(0.55, Math.min(1.0, brightPulse));
+
+      const dotPulse = 0.85 + 0.15 * Math.sin(t * 1.9 + 0.7);
+      kDotMat.opacity = 0.80 + 0.20 * dotPulse;
+      kDotMat.size = BASE_KUMMER_DOT * (1 + 0.15 * (0.5 + 0.5 * Math.sin(t * 1.4)));
+
+      const edgePulse = 0.85 + 0.20 * Math.sin(t * 1.5 + 1.2);
+      kEdgeMat.opacity = 0.82 + 0.18 * edgePulse;
+      kEdgeMat.size = BASE_KUMMER_EDGE * (1 + 0.18 * (0.5 + 0.5 * Math.sin(t * 1.3 + 0.5)));
+    } else if (clebschActive) {
+      const breathPhaseC = t * (2 * Math.PI / 20.0);
+      const rawBreath = 0.5 - 0.5 * Math.cos(breathPhaseC);
+      const easedBreath = rawBreath * rawBreath * (3 - 2 * rawBreath);
+      const breathScale = 0.82 + 0.18 * easedBreath;
+      const inner = 1 + 0.010 * Math.sin(t * 1.1);
+      surface.scale.setScalar((scales['Clebsch Cubic'] || 0.6) * breathScale * inner);
+
+      const brightPulse = 0.78 + 0.22 * Math.sin(t * 1.6);
+      clLineMat.opacity = Math.max(0.5, Math.min(1.0, brightPulse));
+
+      const dotPulse = 0.85 + 0.15 * Math.sin(t * 1.9 + 0.7);
+      clDotMat.opacity = 0.75 + 0.25 * dotPulse;
+      clDotMat.size = BASE_CLEBSCH_DOT * (1 + 0.15 * (0.5 + 0.5 * Math.sin(t * 1.4)));
+
+      const edgePulse = 0.85 + 0.20 * Math.sin(t * 1.5 + 1.2);
+      clEdgeMat.opacity = 0.80 + 0.20 * edgePulse;
+      clEdgeMat.size = BASE_CLEBSCH_EDGE * (1 + 0.20 * (0.5 + 0.5 * Math.sin(t * 1.2 + 0.4)));
+    } else if (lopezActive) {
+      if (t - lastLopezUpdate > LOPEZ_UPDATE_INTERVAL) {
+        lastLopezUpdate = t;
+        updateLopez(lopezE);
+      }
+
+      const inner = 1 + 0.015 * Math.sin(t * 1.05);
+      surface.scale.setScalar((scales['López–Ros'] || 0.28) * inner * (1.0 / lopezE));
+
+      const brightPulse = 0.80 + 0.20 * Math.sin(t * 1.55);
+      lLineMat.opacity = Math.max(0.55, Math.min(1.0, brightPulse));
+
+      const dotPulse = 0.85 + 0.15 * Math.sin(t * 1.9 + 0.6);
+      lDotMat.opacity = 0.80 + 0.20 * dotPulse;
+      lDotMat.size = BASE_LOPEZ_DOT * (1 + 0.15 * (0.5 + 0.5 * Math.sin(t * 1.4)));
+
+      const edgePulse = 0.85 + 0.18 * Math.sin(t * 1.4 + 1.1);
+      lEdgeMat.opacity = 0.82 + 0.18 * edgePulse;
+      lEdgeMat.size = BASE_LOPEZ_EDGE * (1 + 0.18 * (0.5 + 0.5 * Math.sin(t * 1.3 + 0.5)));
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
